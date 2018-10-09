@@ -1,6 +1,7 @@
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+source("DataAndReturnFct.R")
 
-
-WLR.test = function(data,weight,density1,density2,mu,sigma,alpha = 0.05){
+WLR.test = function(data,weight,density1,density2,mu=0,sigma=1,alpha = 0.05){
   #browser()
   n <- length(data)
   Y <- (data-mu)/sigma
@@ -33,7 +34,15 @@ w = function(x){
 }
 
 
+forecast = read.csv("SP500_Roll.csv",sep = ",",header = T)[,2]
 
+y = SP500_returns_OOS
+x = forecast[1:(length(forecast)/2)]
+z = c(x,x,1)
+WLR.test(y,w,density1 = dnorm(y,mean=0,sd=forecast),
+         density2 = dnorm(y,mean=0,sd=z))
+
+plot(dnorm(y),dnorm(y,mean=0,sd=forecast))
 
 
 

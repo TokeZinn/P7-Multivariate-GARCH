@@ -38,11 +38,11 @@ returns = function(data, series = NULL, logreturns = T, Date = T){
   #browser()
   
   if(logreturns){
-    return_matrix = log(placeholder[2:n,]) - log(placeholder[2:n - 1,])
+    return_matrix = 100*(log(placeholder[2:n,]) - log(placeholder[2:n - 1,]))
     result = as.tibble(cbind(as.matrix(data[2:n,]),return_matrix))
     names(result) = c(name_data,name_returns)
   }else{
-    return_matrix = (placeholder[2:n,] - placeholder[2:n - 1,])/placeholder[2:n - 1,]
+    return_matrix = 100*((placeholder[2:n,] - placeholder[2:n - 1,])/placeholder[2:n - 1,])
     result = as.tibble(cbind(as.matrix(data[2:n,]),return_matrix))
     names(result) = c(name_data,name_returns)
   }
