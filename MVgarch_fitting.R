@@ -60,5 +60,9 @@ lines(sig1,type = "l")
 
 
 
+save(mod,file = "BEKK_forecasts.Rdata")
+
+
+
 
 
