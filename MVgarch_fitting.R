@@ -9,14 +9,6 @@ source("./DataAndReturnFct.R")
 DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
 OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 
-model = BEKK(as.matrix(DF), order = c(1, 1), params = NULL, fixed = NULL
-             , method = "BFGS",
-     verbose = F)
-
-
-dummy = matrix(0,nrow=10,ncol=3)
-for(i in 1:3){dummy[,i] = sample(1:10,10,replace=T)}
-
 
 Rolling_BEKK = function(IS , OS , Spec,dim = 3){
   #browser()
@@ -31,7 +23,7 @@ Rolling_BEKK = function(IS , OS , Spec,dim = 3){
   for (i in 1:m) {
     Current_Data = All_Data[i:(n-1+i),]
     
-    Fit = BEKK(as.matrix(Current_Data),order = Spec,method = "BFGS")
+    Fit = BEKK(as.matrix(Current_Data),order = Spec,method = "BFGS",verbose=F)
     
     C = Fit$est.params[[1]]
     A = Fit$est.params[[2]]
@@ -48,6 +40,7 @@ Rolling_BEKK = function(IS , OS , Spec,dim = 3){
     
     OneSigma[[i]] = forecast
     
+    print(c("Iteration = ",i),sep="\n")
   }
   
   return(OneSigma)
@@ -56,8 +49,14 @@ Rolling_BEKK = function(IS , OS , Spec,dim = 3){
 
 mod = Rolling_BEKK(DF,OS,c(1,1),dim = 3)
 
+sig1 = c()
 
+for (i in mod){
+  sig1 = c(sig1, i[1,1])
+}
 
+plot(abs(OS[,1]), type = "l", )
+lines(sig1,type = "l")
 
 
 
