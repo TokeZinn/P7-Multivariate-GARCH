@@ -9,7 +9,7 @@ source("./DataAndReturnFct.R")
 #Fitting garch models using rugarch.
 
 Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                  mean.model = list( armaOrder = c(0,0) , include.mean = T) )
+                  mean.model = list( armaOrder = c(0,0) , include.mean = F) )
 
 
 SP_garch = ugarchfit(Spec, data = SP500_returns , solver = "hybrid")
