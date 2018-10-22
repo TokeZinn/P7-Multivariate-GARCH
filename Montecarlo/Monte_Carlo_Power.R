@@ -1,18 +1,6 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc)
 
-source("./MVWLR_power.R")
-
-sim = mvrnorm(100,mu = rep(0,3),Sigma = diag(3))
-f = function(x){
-  return(emdbook::dmvnorm(x,mu = rep(0,3),Sigma = diag(3)))
-}
-g = function(x){
-  return(mvtnorm::dmvt(x,delta = rep(0,3),sigma = diag(c(2,2,2)),log = F,df=3))
-}
-
-WLR.test.power(data = sim,weight = "csl",density1 = f,density2 = g,r=rep(0,3))
-
 WLR.test.power = function(data,weight = FALSE,density1,density2,alpha = 0.05,
                           int1,int2,r){
   
@@ -58,37 +46,54 @@ WLR.test.power = function(data,weight = FALSE,density1,density2,alpha = 0.05,
               Best_density = best ))
 }
 
-MC_power = function(c,dist = "norm",B=1e4,dim = 3,r = rep(0,dim),w = "cl",
+MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,w = "cl",
                     inf = 10,tol = 1e-6,df = 3){
-  #browser()
-  f = function(x){
-    return(emdbook::dmvnorm(x,mu = rep(0,3),Sigma = diag(3)))
-  }
-  g = function(x){
-    return(sqrt((df-2)/df)*mvtnorm::dmvt(x,delta = rep(0,3),sigma = diag(c(2,2,2)),log = F,df=df))
-  }
-  int1 = cubature::adaptIntegrate(f,lowerLimit = rep(-inf,dim),
-                                  upperLimit = r,absError = tol)$integral
-  int2 = cubature::adaptIntegrate(g,lowerLimit = rep(-inf,dim),
-                                  upperLimit = r,absError = tol)$integral
-  n = c/int1
-  result = matrix(0,nrow = B,ncol = 3)
-  for(i in 1:B){
-    
-    sim = mvrnorm(n,mu = rep(0,dim),Sigma = diag(dim))
-    test = WLR.test.power(data = sim,weight = w,density1 = f,density2 = g,
-                          int1 = int1,int2 = int2,r=r)
-    result[i,] <- c(test$Best_density)
-    
-    if((i %% 20) == 0){
-      print(i)
+  browser()
+  for(t in rs){
+    tic()
+    Reject_r_count = c()
+    r = rep(t,dim)
+    f = function(x){
+      return(emdbook::dmvnorm(x,mu = rep(0,3),Sigma = diag(3)))
     }
+    g = function(x){
+      return(sqrt((df-2)/df)*mvtnorm::dmvt(x,delta = rep(0,3),sigma = diag(3),log = F,df=df))
+    }
+    int1 = cubature::adaptIntegrate(f,lowerLimit = rep(-inf,dim),
+                                    upperLimit = r,absError = tol)$integral
+    int2 = cubature::adaptIntegrate(g,lowerLimit = rep(-inf,dim),
+                                    upperLimit = r,absError = tol)$integral
+    n = c/int1
+    for(i in 1:B){
+      sim = mvrnorm(n, mu = rep(0,3) , Sigma = diag(3))  
+      test = WLR.test.power(data = sim,weight = w,density1 = f,density2 = g,
+                            int1 = int1,int2 = int2,r=r)
+      temp = ifelse(Test$Best_density == "Density 1" , 1 , 0)
+      temp2 = ifelse(Test$Best_density == "Density 2", -1 ,0)
+      Reject_r_count[i] = ifelse(temp == 1 , 1 , temp2)
+      
+    }
+    
+    Reject_Matrix[r] = sum(Reject_r_count)
+    print(c("r = ",r))
+    toc()
   }
   return(result)  
 }
 
-tic() ; h = MC_power(c=200,B = 100,w = "cl",r = rep(0,3)); toc()
-tic() ; h = MC_power(c=200,B = 100,w = "csl"); toc()
+rs = seq(from = -3, to = 3,by = 0.1)
+set.seed(1)
+tic() ; h = MC_power(c=100,B = 10000,w = "cl",rs = rs,inf = 7); toc()  
 
+save(h,file = "cl_power.Rdata")
+
+set.seed(711)
+for(j in seq(from = -4, to = 4,by = 0.1)){
+  r = rep(j,3)
+  tic() ; k = MC_power(c=200,B = 100,w = "csl",r,inf = 7); toc()
+  print(c("r = ",r[1]))
+}
+
+save(k,file = "csl_power.Rdata")
 
 
