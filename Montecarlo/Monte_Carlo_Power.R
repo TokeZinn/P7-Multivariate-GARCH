@@ -1,57 +1,21 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc)
 
-WLR.test.power = function(data,weight = FALSE,density1,density2,alpha = 0.05,
-                          int1,int2,r){
-  
-  n <- length(data[,1]);m <- length(data[1,])
-  
-  Y <- as.matrix(data)
-  
-  FUN = function(x){
-    return(ifelse(sum(as.numeric(ifelse(x<r,1,0)))==m,1,0))
-  }
-  Indy <- apply(Y,MARGIN = 1,FUN)
-  if(weight == "csl"){
-    FUN_c = function(x){
-      return(as.numeric(!FUN(x)))
-    }
-    Indy_c <- apply(Y,MARGIN = 1,FUN_c)
-    
-    S1 = Indy*(log(density1(Y))) + Indy_c*(log(1-int1))
-    S2 = Indy*(log(density2(Y))) + Indy_c*(log(1-int2))
-  }
-  if(weight == "cl"){
-    Indy <- apply(Y,MARGIN = 1,FUN)
-    S1 = Indy*(log(density1(Y)/int1))
-    S2 = Indy*(log(density2(Y)/int2))
-  }
-  WLR <- S1 - S2
-  WLR.bar <- sum(WLR)/n
-  hacsigma <- sqrt( sum(WLR^2)/n )
-  
-  t <- WLR.bar*sqrt(n)/(hacsigma)
-  p <- pnorm(t)
-  best = "Not significally different"
-  if(p<alpha/2){
-    best = "Density 2"
-  }
-  if(p>1-alpha/2){
-    best = "Density 1"
-  }
-  p.value <- 2*min(c(1-pnorm(t),pnorm(t)))
-  
-  return(list(P_value = p.value,
-              Statistic = t, 
-              Best_density = best ))
-}
-
-MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,w = "cl",
+MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
                     inf = 10,tol = 1e-6,df = 3){
-  browser()
+  #browser()
+  Reject_Matrix_cl = matrix(data = 0, nrow = length(rs) , ncol = 1)
+  Reject_Matrix_csl = matrix(data = 0, nrow = length(rs) , ncol = 1)
+  FUN = function(x){
+    return(ifelse(sum(as.numeric(ifelse(x<r,1,0)))==3,1,0))
+  }
+  FUN_c = function(x){
+    return(as.numeric(!FUN(x)))
+  }
   for(t in rs){
     tic()
-    Reject_r_count = c()
+    Reject_r_count_cl = c()
+    Reject_r_count_csl = c()
     r = rep(t,dim)
     f = function(x){
       return(emdbook::dmvnorm(x,mu = rep(0,3),Sigma = diag(3)))
@@ -65,34 +29,80 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,w = "cl",
                                     upperLimit = r,absError = tol)$integral
     n = c/int1
     for(i in 1:B){
-      sim = mvrnorm(n, mu = rep(0,3) , Sigma = diag(3))  
-      test = WLR.test.power(data = sim,weight = w,density1 = f,density2 = g,
-                            int1 = int1,int2 = int2,r=r)
-      temp = ifelse(Test$Best_density == "Density 1" , 1 , 0)
-      temp2 = ifelse(Test$Best_density == "Density 2", -1 ,0)
-      Reject_r_count[i] = ifelse(temp == 1 , 1 , temp2)
+      WLR_bar = 0
+      hacsigma_cl = 0
+      hacsigma_csl = 0
+      if(i %% 500 == 0){
+        print(i)
+      }
+      for(j in 1:n){
+        sim = mvrnorm(1, mu = rep(0,3) , Sigma = diag(3))
+        {#CL
+          Indy <- FUN(sim)
+          S1 = Indy*(log(f(sim)/int1))
+          S2 = Indy*(log(g(sim)/int2))
+          WLR <- S1-S2
+          WLR_bar_cl <- WLR_bar+WLR
+          hacsigma_cl <- hacsigma_cl + WLR^2
+        }
+        {#CSL
+          Indy_c <- FUN_c(sim)
+          S1 = Indy*(log(f(sim))) + Indy_c*(log(1-int1))
+          S2 = Indy*(log(g(sim))) + Indy_c*(log(1-int2))
+          WLR <- S1-S2
+          WLR_bar_csl <- WLR_bar+WLR
+          hacsigma_csl <- hacsigma_csl + WLR^2
+        }
+      }
+      #browser()
+      hacsigma_cl <- sqrt( hacsigma_cl/n )
+      WLR_bar_cl <- WLR_bar_cl/n
+      t <- WLR_bar_cl*sqrt(n)/(hacsigma_cl)
+      p <- pnorm(t)
+      best_cl = "Not significally different"
+      if(!is.na(p)){
+        if(p<alpha/2){
+          best_cl = "Density 2"
+        }
+        if(p>1-alpha/2){
+          best_cl = "Density 1"
+        }
+      }
+      hacsigma_csl <- sqrt( hacsigma_csl/n )
+      WLR_bar_csl <- WLR_bar_csl/n
+      t <- WLR_bar_csl*sqrt(n)/(hacsigma_csl)
+      p <- pnorm(t)
+      best_csl = "Not significally different"
+      if(!is.na(p)){
+        if(p<alpha/2){
+          best_csl = "Density 2"
+        }
+        if(p>1-alpha/2){
+          best_csl = "Density 1"
+        }
+      }
+      
+      
+      Reject_r_count_cl[i] = ifelse(best_cl == "Density 1" , 1 , 0)
+      Reject_r_count_csl[i] = ifelse(best_csl == "Density 1" , 1 , 0)
       
     }
     
-    Reject_Matrix[r] = sum(Reject_r_count)
+    Reject_Matrix_cl[r] = sum(Reject_r_count_cl)/B
+    Reject_Matrix_csl[r] = sum(Reject_r_count_csl)/B
     print(c("r = ",r))
     toc()
   }
-  return(result)  
+  return(list(Reject_Matrix_cl,Reject_Matrix_csl))
 }
 
-rs = seq(from = -3, to = 3,by = 0.1)
+rs = seq(from = -4, to = 4,by = 0.1)
 set.seed(1)
-tic() ; h = MC_power(c=100,B = 10000,w = "cl",rs = rs,inf = 7); toc()  
+tic() ; h = MC_power(c=5,B = 1,rs = -2,inf = 7); toc()  
 
 save(h,file = "cl_power.Rdata")
 
-set.seed(711)
-for(j in seq(from = -4, to = 4,by = 0.1)){
-  r = rep(j,3)
-  tic() ; k = MC_power(c=200,B = 100,w = "csl",r,inf = 7); toc()
-  print(c("r = ",r[1]))
-}
+
 
 save(k,file = "csl_power.Rdata")
 

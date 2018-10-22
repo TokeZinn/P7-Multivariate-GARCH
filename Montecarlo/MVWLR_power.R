@@ -1,9 +1,10 @@
-WLR.test.power = function(data,weight = FALSE,density1,density2,alpha = 0.05){
+WLR.test.power = function(data,weight = FALSE,density1,density2,alpha = 0.05,
+                          int1,int2,r){
   
   n <- length(data[,1]);m <- length(data[1,])
   
   Y <- as.matrix(data)
-    
+  
   FUN = function(x){
     return(ifelse(sum(as.numeric(ifelse(x<r,1,0)))==m,1,0))
   }
@@ -12,32 +13,12 @@ WLR.test.power = function(data,weight = FALSE,density1,density2,alpha = 0.05){
     FUN_c = function(x){
       return(as.numeric(!FUN(x)))
     }
-    #browser()
     Indy_c <- apply(Y,MARGIN = 1,FUN_c)
-    int1 = cubature::adaptIntegrate(density1,lowerLimit = c(r[1],-inf,-inf),
-                                    upperLimit = rep(inf,m),absError = tol)$integral +
-      cubature::adaptIntegrate(density1,lowerLimit = c(-inf,r[2],-inf),
-                                    upperLimit = c(r[1],inf,inf),absError = tol)$integral +
-      cubature::adaptIntegrate(density1,lowerLimit = c(-inf,-inf,r[3]),
-                               upperLimit = c(r[1],r[2],inf),absError = tol)$integral
-      
-    int2 = cubature::adaptIntegrate(density2,lowerLimit = c(r[1],-inf,-inf),
-                                    upperLimit = rep(inf,m),absError = tol)$integral +
-      cubature::adaptIntegrate(density2,lowerLimit = c(-inf,r[2],-inf),
-                               upperLimit = c(r[1],inf,inf),absError = tol)$integral +
-      cubature::adaptIntegrate(density2,lowerLimit = c(-inf,-inf,r[3]),
-                               upperLimit = c(r[1],r[2],inf),absError = tol)$integral
     
-    
-    S1 = Indy*(log(density1(Y))) + Indy_c*(log(int1))
-    S2 = Indy*(log(density2(Y))) + Indy_c*(log(int2))
+    S1 = Indy*(log(density1(Y))) + Indy_c*(log(1-int1))
+    S2 = Indy*(log(density2(Y))) + Indy_c*(log(1-int2))
   }
   if(weight == "cl"){
-    Indy <- apply(Y,MARGIN = 1,FUN)
-    int1 = cubature::adaptIntegrate(density1,lowerLimit = rep(-inf,m),
-                                    upperLimit = r,absError = tol)$integral
-    int2 = cubature::adaptIntegrate(density2,lowerLimit = rep(-inf,m),
-                                    upperLimit = r,absError = tol)$integral
     S1 = Indy*(log(density1(Y)/int1))
     S2 = Indy*(log(density2(Y)/int2))
   }
@@ -60,6 +41,3 @@ WLR.test.power = function(data,weight = FALSE,density1,density2,alpha = 0.05){
               Statistic = t, 
               Best_density = best ))
 }
-
-
-
