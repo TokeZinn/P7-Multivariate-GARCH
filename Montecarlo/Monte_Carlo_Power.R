@@ -4,8 +4,8 @@ pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc)
 MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
                     inf = 10,tol = 1e-6,df = 3){
   #browser()
-  Reject_Matrix_cl = matrix(data = 0, nrow = length(rs) , ncol = 1)
-  Reject_Matrix_csl = matrix(data = 0, nrow = length(rs) , ncol = 1)
+  Reject_Matrix_cl = matrix(data = 0, nrow = length(rs) , ncol = 2)
+  Reject_Matrix_csl = matrix(data = 0, nrow = length(rs) , ncol = 2)
   FUN = function(x){
     return(ifelse(sum(as.numeric(ifelse(x<r,1,0)))==3,1,0))
   }
@@ -13,29 +13,30 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
     return(as.numeric(!FUN(x)))
   }
   for(t in rs){
-    tic()
-    Reject_r_count_cl = c()
-    Reject_r_count_csl = c()
+    Reject_r_count_cl = matrix(data = 0, nrow = B , ncol = 2)
+    Reject_r_count_csl = matrix(data = 0, nrow = B , ncol = 2)
     r = rep(t,dim)
     f = function(x){
       return(emdbook::dmvnorm(x,mu = rep(0,3),Sigma = diag(3)))
     }
     g = function(x){
-      return(sqrt((df-2)/df)*mvtnorm::dmvt(x,delta = rep(0,3),sigma = diag(3),log = F,df=df))
+      return(mvtnorm::dmvt(x,delta = rep(0,3),sigma = diag(rep(sqrt((df-2)/df),3)),log = F,df=df))
     }
     int1 = cubature::adaptIntegrate(f,lowerLimit = rep(-inf,dim),
                                     upperLimit = r,absError = tol)$integral
     int2 = cubature::adaptIntegrate(g,lowerLimit = rep(-inf,dim),
                                     upperLimit = r,absError = tol)$integral
-    n = c/int1
+    n = sqrt(c/int1)
     for(i in 1:B){
       WLR_bar = 0
       hacsigma_cl = 0
       hacsigma_csl = 0
-      if(i %% 500 == 0){
+      if(i %% 100 == 0){
         print(i)
       }
-      for(j in 1:n){
+      
+      j <- 0
+      while(j < n){
         sim = mvrnorm(1, mu = rep(0,3) , Sigma = diag(3))
         {#CL
           Indy <- FUN(sim)
@@ -53,7 +54,9 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
           WLR_bar_csl <- WLR_bar+WLR
           hacsigma_csl <- hacsigma_csl + WLR^2
         }
+        j = j + 1
       }
+      
       #browser()
       hacsigma_cl <- sqrt( hacsigma_cl/n )
       WLR_bar_cl <- WLR_bar_cl/n
@@ -68,6 +71,7 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
           best_cl = "Density 1"
         }
       }
+      
       hacsigma_csl <- sqrt( hacsigma_csl/n )
       WLR_bar_csl <- WLR_bar_csl/n
       t <- WLR_bar_csl*sqrt(n)/(hacsigma_csl)
@@ -82,28 +86,25 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
         }
       }
       
-      
-      Reject_r_count_cl[i] = ifelse(best_cl == "Density 1" , 1 , 0)
-      Reject_r_count_csl[i] = ifelse(best_csl == "Density 1" , 1 , 0)
-      
+      Reject_r_count_cl[i,1] = ifelse(best_cl == "Density 1" , 1 , 0)
+      Reject_r_count_csl[i,1] = ifelse(best_csl == "Density 1" , 1 , 0)
+      Reject_r_count_cl[i,2] = ifelse(best_cl == "Density 2" , 1 , 0)
+      Reject_r_count_csl[i,2] = ifelse(best_csl == "Density 2" , 1 , 0)
     }
     
-    Reject_Matrix_cl[r] = sum(Reject_r_count_cl)/B
-    Reject_Matrix_csl[r] = sum(Reject_r_count_csl)/B
+    Reject_Matrix_cl[r,] = c(sum(Reject_r_count_cl[,1])/B,sum(Reject_r_count_cl[,2])/B)
+    Reject_Matrix_csl[r,] = c(sum(Reject_r_count_csl[,1])/B,sum(Reject_r_count_csl[,2])/B)
     print(c("r = ",r))
-    toc()
   }
   return(list(Reject_Matrix_cl,Reject_Matrix_csl))
 }
 
-rs = seq(from = -4, to = 4,by = 0.1)
+rr = 1
+rs = seq(from = -rr, to = rr,by = 0.1)
 set.seed(1)
-tic() ; h = MC_power(c=5,B = 1,rs = -2,inf = 7); toc()  
+tic() ; h = MC_power(c = 5,B = 10000,rs = 0,inf = 10); toc()  
+tic() ; h = MC_power(c=5,B = 10000,rs = rs,inf = 10); toc()  
 
-save(h,file = "cl_power.Rdata")
-
-
-
-save(k,file = "csl_power.Rdata")
+save(h,file = "Power.Rdata")
 
 
