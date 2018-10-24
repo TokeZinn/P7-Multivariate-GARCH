@@ -14,8 +14,8 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
   FUN_c = function(x){
     return(as.numeric(!FUN(x)))
   }
-  for(j in rs){
-    r = rep(j,dim)
+  for(j in 1:length(rs)){
+    r = rep(rs[j],dim)
     Reject_r_count_cl = matrix(data = 0, nrow = B , ncol = 2)
     Reject_r_count_csl = matrix(data = 0, nrow = B , ncol = 2)
     f = function(x){
@@ -90,7 +90,7 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
       Reject_r_count_cl[i,2] = ifelse(best_cl == "Density 2" , 1 , 0)
       Reject_r_count_csl[i,2] = ifelse(best_csl == "Density 2" , 1 , 0)
     }
-    browser()
+    #browser()
     Reject_Matrix_cl[j,] = c(sum(Reject_r_count_cl[,1])/B,sum(Reject_r_count_cl[,2])/B)
     Reject_Matrix_csl[j,] = c(sum(Reject_r_count_csl[,1])/B,sum(Reject_r_count_csl[,2])/B)
     print(c("r = ",r))
@@ -100,7 +100,7 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
 
 
 #set.seed(1)
-#tic() ; k = MC_power(c = 5,B = 100,rs = -3,inf = 10); toc() 
+#tic() ; k = MC_power(c = 5,B = 100,rs = c(0,0.5,1),inf = 10); toc() 
 
 rr = 3
 rs = seq(from = -rr, to = rr,by = 0.1)

@@ -20,9 +20,7 @@ adaptIntegrate(g2,lowerLimit = rep(-10,3),upperLimit = rep(10,3),absError = 1e-7
 adaptIntegrate(g,lowerLimit = c(-1,-1,-1),upperLimit = c(1,1,1))
 
 
+200/(1-adaptIntegrate(f,lowerLimit = rep(-3,3),upperLimit = rep(10,3),absError = 1e-6)$integral)
 
-
-
-p = 1:421341841196
 
 
