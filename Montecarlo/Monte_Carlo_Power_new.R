@@ -9,25 +9,25 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
   Reject_Matrix_cl = matrix(data = 0, nrow = length(rs) , ncol = 2)
   Reject_Matrix_csl = matrix(data = 0, nrow = length(rs) , ncol = 2)
   FUN = function(x){
-    return(ifelse(sum(as.numeric(ifelse(x[1]<r,1,0)))==3,1,0))
+    return(ifelse(!all(x>=r),1,0))
   }
   FUN_c = function(x){
     return(as.numeric(!FUN(x)))
   }
   for(j in rs){
+    r = rep(j,dim)
     Reject_r_count_cl = matrix(data = 0, nrow = B , ncol = 2)
     Reject_r_count_csl = matrix(data = 0, nrow = B , ncol = 2)
-    r = c(j,rep(inf,(dim-1)))
     f = function(x){
       return(emdbook::dmvnorm(x,mu = rep(0,3),Sigma = diag(3)))
     }
     g = function(x){
       return(mvtnorm::dmvt(x,delta = rep(0,3),sigma = diag(rep(sqrt((df-2)/df),3)),log = F,df=df))
     }
-    int1 = cubature::adaptIntegrate(f,lowerLimit = rep(-inf,dim),
-                                    upperLimit = r,absError = tol)$integral
-    int2 = cubature::adaptIntegrate(g,lowerLimit = rep(-inf,dim),
-                                    upperLimit = r,absError = tol)$integral
+    int1 = 1 - cubature::adaptIntegrate(f,lowerLimit = r,
+                                    upperLimit = rep(inf,dim),absError = tol)$integral
+    int2 = 1 - cubature::adaptIntegrate(g,lowerLimit = r,
+                                    upperLimit = rep(inf,dim),absError = tol)$integral
     n = ceiling(c/int1)
     for(i in 1:B){
       if(i %% 500 == 0){
@@ -35,7 +35,6 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
       }
       #browser()
       sim = MASS::mvrnorm(n, mu = rep(0,3) , Sigma = diag(3))
-      
       {#CL
         Indy <- apply(sim,MARGIN = 1,FUN)
         S1 = Indy*(log(f(sim)/int1))
@@ -91,7 +90,7 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
       Reject_r_count_cl[i,2] = ifelse(best_cl == "Density 2" , 1 , 0)
       Reject_r_count_csl[i,2] = ifelse(best_csl == "Density 2" , 1 , 0)
     }
-    #browser()
+    browser()
     Reject_Matrix_cl[j,] = c(sum(Reject_r_count_cl[,1])/B,sum(Reject_r_count_cl[,2])/B)
     Reject_Matrix_csl[j,] = c(sum(Reject_r_count_csl[,1])/B,sum(Reject_r_count_csl[,2])/B)
     print(c("r = ",r))
@@ -99,10 +98,12 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
   return(list(Reject_Matrix_cl,Reject_Matrix_csl))
 }
 
+
+#set.seed(1)
+#tic() ; k = MC_power(c = 5,B = 100,rs = -3,inf = 10); toc() 
+
 rr = 3
 rs = seq(from = -rr, to = rr,by = 0.1)
-set.seed(1)
-tic() ; k = MC_power(c = 5,B = 100,rs = -2,inf = 10); toc() 
 set.seed(771)
 tic() ; h = MC_power(c=200,B = 10000,rs = rs,inf = 10); toc()  
 
