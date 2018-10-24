@@ -99,10 +99,10 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
   return(list(Reject_Matrix_cl,Reject_Matrix_csl))
 }
 
-rr = 1
+rr = 3
 rs = seq(from = -rr, to = rr,by = 0.1)
 set.seed(1)
-tic() ; h = MC_power(c = 5,B = 100,rs = -2,inf = 10); toc() 
+tic() ; k = MC_power(c = 5,B = 100,rs = -2,inf = 10); toc() 
 set.seed(771)
 tic() ; h = MC_power(c=200,B = 10000,rs = rs,inf = 10); toc()  
 
