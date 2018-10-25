@@ -102,7 +102,7 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
 #set.seed(1)
 #tic() ; k = MC_power(c = 5,B = 100,rs = c(0,0.5,1),inf = 10); toc() 
 
-rr = 3
+rr = 2.5
 rs = seq(from = -rr, to = rr,by = 0.1)
 set.seed(771)
 tic() ; h = MC_power(c=200,B = 10000,rs = rs,inf = 10); toc()  
