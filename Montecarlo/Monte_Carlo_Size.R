@@ -49,5 +49,20 @@ Monte_Carlo_Size = function(density1, density2, rs, alphas, N, n ){
 }
 
 
-MC_Matrix = Monte_Carlo_Size(density1 = f, density2 = g, rs = rs, alphas = alphas , N = 10000 , n = 500) 
+#MC_Matrix = Monte_Carlo_Size(density1 = f, density2 = g, rs = rs, alphas = alphas , N = 10000 , n = 500) 
 #save(MC_Matrix, file = "Size.Rdata")
+load("Size.Rdata")
+
+Plot_DF = data.frame(rs, MC_Matrix) %>% .[-(1:5),]; names(Plot_DF) = c("r","0.01","0.05","0.1")
+
+
+Plot_DF %>% gather(key = "Stock", value = "Value",-r) %>% 
+  mutate(Color = case_when(grepl(pattern = "0.01", Stock) ~ "0.01",
+                           grepl(pattern = "0.05", Stock) ~ "0.05",
+                           grepl(pattern = "0.1", Stock) ~ "0.1")) %>% 
+  ggplot(mapping = aes(x = r, y = Value, col = Color, group = Stock)) + geom_line() + 
+  geom_hline(yintercept = 0.01 , linetype = "dashed") + 
+  geom_hline(yintercept = 0.05 , linetype = "dashed") +
+  geom_hline(yintercept = 0.1 , linetype = "dashed") +
+  scale_color_manual(values = c("#FF0000", "#282088","#169312")) +  labs(color = "Significance\nLevels")
+  
