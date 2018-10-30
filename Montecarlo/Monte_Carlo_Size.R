@@ -60,7 +60,7 @@ Plot_DF %>% gather(key = "Stock", value = "Value",-r) %>%
   mutate(Color = case_when(grepl(pattern = "0.01", Stock) ~ "0.01",
                            grepl(pattern = "0.05", Stock) ~ "0.05",
                            grepl(pattern = "0.1", Stock) ~ "0.1")) %>% 
-  ggplot(mapping = aes(x = r, y = Value, col = Color, group = Stock)) + geom_line() + 
+  ggplot(mapping = aes(x = r, y = Value, col = Color, group = Stock)) + geom_line() + ylab("Rejection Rate") +
   geom_hline(yintercept = 0.01 , linetype = "dashed") + 
   geom_hline(yintercept = 0.05 , linetype = "dashed") +
   geom_hline(yintercept = 0.1 , linetype = "dashed") +
