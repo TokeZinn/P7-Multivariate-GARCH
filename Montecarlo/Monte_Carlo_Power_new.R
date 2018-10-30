@@ -105,19 +105,19 @@ MC_power = function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
 rr = 2.5
 rs = seq(from = -rr, to = rr,by = 0.1)
 set.seed(771)
-tic() ; h = MC_power(c=200,B = 10000,rs = rs,inf = 10); toc()  
+tic() ; h2 = MC_power(c=200,B = 10000,rs = rs,inf = 10,df=5); toc()  
 
-#save(h,file = "Power.Rdata")
-load("Power.Rdata")
-cl_true = h[[1]][,1]
-cl_spur = h[[1]][,2]
-csl_true = h[[2]][,1]
-csl_spur = h[[2]][,2]
-plot(rs,cl_true,type = "l",col = "blue",ylim = c(0.985,1.001))
-lines(rs,csl_true,col = "red")
+save(h2,file = "Powerdf5.Rdata")
+#load("Power.Rdata")
+#cl_true = h[[1]][,1]
+#cl_spur = h[[1]][,2]
+#csl_true = h[[2]][,1]
+#csl_spur = h[[2]][,2]
+#plot(rs,cl_true,type = "l",col = "blue",ylim = c(0.985,1.001))
+#lines(rs,csl_true,col = "red")
 
-plot(rs,cl_spur,type = "l",col = "blue",ylim = c(0,0.001))
-lines(rs,csl_spur,col = "red")
+#plot(rs,cl_spur,type = "l",col = "blue",ylim = c(0,0.001))
+#lines(rs,csl_spur,col = "red")
 
 
 
