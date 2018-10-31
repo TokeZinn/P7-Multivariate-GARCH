@@ -100,8 +100,8 @@ MC_power <- function(c,dist = "norm",B=1e4,dim = 3,rs,alpha = 0.05,
 }
 
 
-set.seed(1)
-tic() ; k = MC_power(c = 200,B = 100,rs = c(0,0.5,1),inf = 10,df = 5); toc() 
+#set.seed(1)
+#tic() ; k = MC_power(c = 200,B = 100,rs = c(0,0.5,1),inf = 10,df = 5); toc() 
 
 rr <- 2.5
 rs <- seq(from = -rr, to = rr,by = 0.1)
