@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch)
-source("../DATA/DataAndReturnFct.R")
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#source("../DATA/DataAndReturnFct.R")
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 cl = makePSOCKcluster(10)
 
 
@@ -89,7 +89,7 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     return(d)
   }
   
-  n = 100 #fix
+  n =  #fix
   sim <- list()
   for(i in 1:B){
     sim[[i]] = matrix(0,nrow = is+os,ncol = 3)
@@ -114,10 +114,10 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
       S2 <- Indy*(log(f(sim[[i]][(is+1):(is+os),],H_g)/int2))
       #browser()
       WLR <- S1 - S2
-      WLR.bar <- sum(WLR)/n
-      hacsigma <- sqrt( sum(WLR^2)/n )
+      WLR.bar <- sum(WLR)/os
+      hacsigma <- sqrt( sum(WLR^2)/os )
       
-      t <- WLR.bar*sqrt(n)/(hacsigma)
+      t <- WLR.bar*sqrt(os)/(hacsigma)
       p <- pnorm(t)
       best_cl <- "Not significally different"
       if(is.na(p)){
@@ -165,6 +165,7 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
   }
   #browser()
   j = 1
+  browser()
   Reject_Matrix_cl[j,] <- c(sum(Reject_r_count_cl[,1])/B,sum(Reject_r_count_cl[,2])/B)
   Reject_Matrix_csl[j,] <- c(sum(Reject_r_count_csl[,1])/B,sum(Reject_r_count_csl[,2])/B)
   
@@ -176,7 +177,9 @@ OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 end = length(DF[,1]); end2 = length(OS[,1])
 set.seed(1)
 tic() ; k = MC_power_Bekk(in.sample = DF[(end-100):end,],
-                          out.sample = OS[1:10,],B = 10); toc()
+                          out.sample = OS[1:5,],B = 2); toc()
+
+
 
 rr <- 2.5
 rs <- seq(from = -rr, to = rr,by = 0.1)

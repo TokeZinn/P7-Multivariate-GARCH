@@ -1,4 +1,4 @@
-
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(Quandl, tidyverse)
 
 # Returns func ----
