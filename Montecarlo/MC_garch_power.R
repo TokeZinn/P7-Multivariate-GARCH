@@ -1,7 +1,6 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch)
 source("./DATA/DataAndReturnFct.R")
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 cl = makePSOCKcluster(10)
 
 
@@ -14,21 +13,28 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
   m = length(OS[,1])
   
   OneSigma = list()
-  
+
   for (i in 1:m) {
     Current_Data = All_Data[i:(n-1+i),]
     
-    Fit = BEKK(as.matrix(Current_Data),order = Spec,method = "BFGS",verbose=F)
-    
-    C = Fit$est.params[[1]]
-    A = Fit$est.params[[2]]
-    B = Fit$est.params[[3]]
-    H = Fit$H.estimated[[n]]
-    
-    res = c()
-    for(j in 1:dim){
-      res = c(res,Fit$residuals[[j]][n])
+    if(i %% 10 == 0 | i == 1){
+      Fit = BEKK(as.matrix(Current_Data),order = Spec,method = "BFGS",verbose=F)
+      
+      C = Fit$est.params[[1]]
+      A = Fit$est.params[[2]]
+      B = Fit$est.params[[3]] 
+      H = Fit$H.estimated[[n]]
     }
+    else{
+      H = C%*%t(C) + A%*%res%*%t(res)%*%t(A) + B%*%H%*%t(B)
+    }
+    
+    
+    #res = c()
+    #for(j in 1:dim){
+    #  res = c(res,Fit$residuals[[j]][n])
+    #}
+    res = Current_Data[n,]
     
     
     forecast = C%*%t(C) + A%*%res%*%t(res)%*%t(A) + B%*%H%*%t(B)
@@ -162,7 +168,7 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     #Reject_r_count_csl[i,1]<-ifelse(best_csl == "Density 1" , 1 , 0)
     Reject_r_count_cl[i,2] <- ifelse(best_cl == "Density 2" , 1 , 0)
     #Reject_r_count_csl[i,2] <- ifelse(best_csl == "Density 2" , 1 , 0)
-    print(c("B = ", B))
+    print(c("i = ", i))
   }
   #browser()
   j = 1
@@ -177,7 +183,7 @@ DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
 OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 end = length(DF[,1]); end2 = length(OS[,1])
 set.seed(1)
-tic() ; k = MC_power_Bekk(in.sample = DF[(end-500):end,],
+tic() ; k = MC_power_Bekk(in.sample = DF[(end-250):end,],
                           out.sample = OS[1:100,],B = 100); toc()
 
 
