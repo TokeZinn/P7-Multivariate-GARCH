@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch)
-#source("../DATA/DataAndReturnFct.R")
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+source("./DATA/DataAndReturnFct.R")
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 cl = makePSOCKcluster(10)
 
 
@@ -162,6 +162,7 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     #Reject_r_count_csl[i,1]<-ifelse(best_csl == "Density 1" , 1 , 0)
     Reject_r_count_cl[i,2] <- ifelse(best_cl == "Density 2" , 1 , 0)
     #Reject_r_count_csl[i,2] <- ifelse(best_csl == "Density 2" , 1 , 0)
+    print(c("B = ", B))
   }
   #browser()
   j = 1
@@ -176,8 +177,8 @@ DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
 OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 end = length(DF[,1]); end2 = length(OS[,1])
 set.seed(1)
-tic() ; k = MC_power_Bekk(in.sample = DF[(end-100):end,],
-                          out.sample = OS[1:5,],B = 2); toc()
+tic() ; k = MC_power_Bekk(in.sample = DF[(end-500):end,],
+                          out.sample = OS[1:100,],B = 100); toc()
 
 
 
