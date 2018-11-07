@@ -6,11 +6,11 @@ source("MVWLR_size.R")
 set.seed(712)
 
 f = function(x){
-  return(emdbook::dmvnorm(x, mu = rep(1,3), Sigma = diag(3) ) )
+  return(emdbook::dmvnorm(x, mu = rep(0,3), Sigma = diag(4) ) )
 }
 
 g = function(x){
-  return(emdbook::dmvnorm(x, mu = rep(-1,3), Sigma = diag(3) ) )
+  return(emdbook::dmvnorm(x, mu = rep(0,3), Sigma = diag(8) ) )
 }
 
 alphas = c(0.01, 0.05 , 0.10)
@@ -19,12 +19,11 @@ rs = seq(0.1, 4 , by = 0.1)
 
 Monte_Carlo_Size = function(density1, density2, rs, alphas, N, n ){
   Reject_Matrix = matrix(data = 0, nrow = length(rs) , ncol = length(alphas ))
-    
     for(r in 1:length(rs) ){
       Reject_r_count = matrix(0, nrow = N , ncol = length(alphas ) )
       
-      Integral1 = adaptIntegrate(f , lowerLimit = c(-rs[r],-rs[r],-rs[r]), upperLimit = c(rs[r],rs[r],rs[r]), absError = 1e-6)$integral
-      Integral2 = adaptIntegrate(g , lowerLimit = c(-rs[r],-rs[r],-rs[r]), upperLimit = c(rs[r],rs[r],rs[r]), absError = 1e-6)$integral
+      Integral1 = adaptIntegrate(density1 , lowerLimit = c(-rs[r],-rs[r],-rs[r]), upperLimit = c(rs[r],rs[r],rs[r]), absError = 1e-6)$integral
+      Integral2 = adaptIntegrate(density2 , lowerLimit = c(-rs[r],-rs[r],-rs[r]), upperLimit = c(rs[r],rs[r],rs[r]), absError = 1e-6)$integral
       
       for(i in 1:N){
       
@@ -49,9 +48,9 @@ Monte_Carlo_Size = function(density1, density2, rs, alphas, N, n ){
 }
 
 
-#MC_Matrix = Monte_Carlo_Size(density1 = f, density2 = g, rs = rs, alphas = alphas , N = 10000 , n = 500) 
+MC_Matrix = Monte_Carlo_Size(density1 = f, density2 = g, rs = rs, alphas = alphas , N = 100 , n = 500) 
 #save(MC_Matrix, file = "Size.Rdata")
-load("Size.Rdata")
+#load("Size.Rdata")
 
 Plot_DF = data.frame(rs, MC_Matrix) %>% .[-(1:5),]; names(Plot_DF) = c("r","0.01","0.05","0.1")
 

@@ -120,5 +120,3 @@ tic() ; h2 <- MC_power(c=200,B = 10000,rs = rs,inf = 10,df=5); toc()
 #lines(rs,csl_spur,col = "red")
 
 
-
-

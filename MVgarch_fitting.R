@@ -1,16 +1,16 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-pacman::p_load(tidyverse,rmgarch,mgarchBEKK)
+pacman::p_load(tidyverse,rmgarch,mgarchBEKK,tictoc)
 
 
 
-source("./DataAndReturnFct.R")
+source("./DATA/DataAndReturnFct.R")
 
 
 DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
 OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 
 
-Rolling_BEKK = function(IS , OS , Spec,dim = 3){
+Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3){
   #browser()
   IS = IS %>% as.data.frame() ; OS = OS %>% as.data.frame() ; names(OS) <- names(IS)
   All_Data = rbind(IS,OS) %>% as.matrix()
@@ -47,7 +47,11 @@ Rolling_BEKK = function(IS , OS , Spec,dim = 3){
   
 }
 
+end = length(DF[,1]); end2 = length(OS[,1])
+tic (); mod = Rolling_BEKK(DF[(end-100):end,],OS[(end2-100):end2,],c(1,1),dim = 3);toc()
 mod = Rolling_BEKK(DF,OS,c(1,1),dim = 3)
+
+
 
 sig1 = c()
 
@@ -60,7 +64,6 @@ lines(sig1,type = "l")
 
 
 
-save(mod,file = "BEKK_forecasts.Rdata")
 
 
 

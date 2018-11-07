@@ -4,7 +4,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 pacman::p_load(tidyverse, rugarch, tictoc)
 
-source("./DataAndReturnFct.R")
+source("./DATA/DataAndReturnFct.R")
 
 #Fitting garch models using rugarch.
 
