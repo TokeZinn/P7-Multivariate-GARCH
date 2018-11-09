@@ -40,7 +40,7 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
     
     OneSigma[[i]] = forecast
     
-    print(c("Iteration = ",i),sep="\n")
+    #print(c("Iteration = ",i),sep="\n")
   }
   
   return(OneSigma)
@@ -94,7 +94,12 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     
     Fit <- BEKK(All_data)
     H_list <- Fit$H.estimated
-    
+    Parameters = c(vech(t(Fit$est.params[[1]])))
+    for(i in 2:length(Fit$est.params)){
+      Parameters = c(Parameters,vec(Fit$est.params[[i]]))
+    }
+      
+      
     int1 = 1
     int2 = 1
     
@@ -108,18 +113,19 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     
   }
   
-  sim <- list()
+  #sim <- list()
   for(i in 1:B){
-    sim[[i]] = matrix(0,nrow = is+os,ncol = 3)
-    for (t in 1:length(H_list)) {
-      sim[[i]][t,] <- MASS::mvrnorm(1, mu = rep(0,3) , Sigma = H_list[[t]])
-    }  
-    #browser()
-    H_f <- Rolling_BEKK(IS = sim[[i]][1:is,],OS = sim[[i]][(is+1):(is+os),])
-    g_matrix <- matrix(0,ncol = 3,nrow = os)
+    simbekk <- simulateBEKK(3,is+os,params = Parameters)
+    sim <- matrix(0,nrow = is+os,ncol = 3)
     for(j in 1:3){
-      g_matrix[,j] <- RollingForecast(IS = sim[[i]][1:is,j],OS = sim[[i]][(is+1):(is+os),j])
+      sim[,j] <- simbekk$eps[[j]]
     }
+    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),])
+    #g_matrix <- matrix(0,ncol = 3,nrow = os)
+    #for(j in 1:3){
+    #  g_matrix[,j] <- RollingForecast(IS = sim[1:is,j],OS = sim[(is+1):(is+os),j])
+    #}
+    
     #Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
     #                  mean.model = list( armaOrder = c(0,0) , include.mean = F) )
     #for(j in 1:3){
@@ -128,15 +134,18 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     #                             calculate.VaR = F,window.size = is)
     #}
     H_g = list()
+    #for(j in 1:os){
+    #  H_g[[j]] <- diag(g_matrix[j,])
+    #}
     for(j in 1:os){
-      H_g[[j]] <- diag(g_matrix[j,])
+      H_g[[j]] <- cov(All_data[j:(j+is),])
     }
     
     #CL
     {
       Indy <- 1
-      S1 <- Indy*(log(f(sim[[i]][(is+1):(is+os),],H_f)/int1))
-      S2 <- Indy*(log(f(sim[[i]][(is+1):(is+os),],H_g)/int2))
+      S1 <- Indy*(log(f(sim[(is+1):(is+os),],H_f)/int1))
+      S2 <- Indy*(log(f(sim[(is+1):(is+os),],H_g)/int2))
       
       #browser()
       
