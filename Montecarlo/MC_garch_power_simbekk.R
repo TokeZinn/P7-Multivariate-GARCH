@@ -13,7 +13,7 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
   m = length(OS[,1])
   
   OneSigma = list()
-
+  
   for (i in 1:m) {
     Current_Data = All_Data[i:(n-1+i),]
     
@@ -59,11 +59,11 @@ RollingForecast = function(IS , OS ){
   for (i in 1:m) {
     Current_Data = All_Data[i:(n-1+i)]
     if(i %% 5 == 0 | i == 1){
-    Fit <- ugarchfit(Spec, data = Current_Data , solver = "hybrid",cluster = cl)
-    omega <- Fit@fit$coef[1]
-    alpha <- Fit@fit$coef[2]
-    beta <- Fit@fit$coef[3]
-    H <- tail(Fit@fit$sigma,1)^2
+      Fit <- ugarchfit(Spec, data = Current_Data , solver = "hybrid",cluster = cl)
+      omega <- Fit@fit$coef[1]
+      alpha <- Fit@fit$coef[2]
+      beta <- Fit@fit$coef[3]
+      H <- tail(Fit@fit$sigma,1)^2
     }
     else{
       H <- omega + alpha*res^2 + beta*H
@@ -85,27 +85,27 @@ RollingForecast = function(IS , OS ){
 MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
   #browser()
   {
-  Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
-  Reject_Matrix_csl <- matrix(data = 0, nrow = length(1) , ncol = 2)
-  is <- length(in.sample[,1]) ; os <- length(out.sample[,1])
-  Reject_r_count_cl <- matrix(data = 0, nrow = B , ncol = 2)
-  Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
-  All_data = rbind(in.sample,out.sample)
-  
-  Fit <- BEKK(All_data)
-  H_list <- Fit$H.estimated
-  
-  int1 = 1
-  int2 = 1
-  
-  f <- function(x,H){
-    d = c()
-    for(num in 1:os){
-      d[num] <- emdbook::dmvnorm(x,mu = rep(0,3),Sigma = H[[num]])
+    Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
+    Reject_Matrix_csl <- matrix(data = 0, nrow = length(1) , ncol = 2)
+    is <- length(in.sample[,1]) ; os <- length(out.sample[,1])
+    Reject_r_count_cl <- matrix(data = 0, nrow = B , ncol = 2)
+    Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
+    All_data = rbind(in.sample,out.sample)
+    
+    Fit <- BEKK(All_data)
+    H_list <- Fit$H.estimated
+    
+    int1 = 1
+    int2 = 1
+    
+    f <- function(x,H){
+      d = c()
+      for(num in 1:os){
+        d[num] <- emdbook::dmvnorm(x,mu = rep(0,3),Sigma = H[[num]])
+      }
+      return(d)
     }
-    return(d)
-  }
-  
+    
   }
   
   sim <- list()
@@ -160,30 +160,30 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
       }}
     #CSL
     {
-    #   Indy_c <- 0
-    #   S1 <- Indy*(log(f(sim))) + Indy_c*(log(1-int1))
-    #   S2 <- Indy*(log(g(sim))) + Indy_c*(log(1-int2))
-    # 
-    # 
-    #   WLR <- S1 - S2
-    #   WLR.bar <- sum(WLR)/n
-    #   hacsigma <- sqrt( sum(WLR^2)/n )
-    # 
-    #   t <- WLR.bar*sqrt(n)/(hacsigma)
-    #   p <- pnorm(t)
-    #   best_csl <- "Not significally different"
-    #   if(is.na(p)){
-    #     best_csl <- "Not significally different"
-    #   }
-    #   else{
-    #     if(p<alpha/2){
-    #       best_csl <- "Density 2"
-    #     }
-    #     if(p>1-alpha/2){
-    #       best_csl <- "Density 1"
-    #     }
-    #   }
-      }
+      #   Indy_c <- 0
+      #   S1 <- Indy*(log(f(sim))) + Indy_c*(log(1-int1))
+      #   S2 <- Indy*(log(g(sim))) + Indy_c*(log(1-int2))
+      # 
+      # 
+      #   WLR <- S1 - S2
+      #   WLR.bar <- sum(WLR)/n
+      #   hacsigma <- sqrt( sum(WLR^2)/n )
+      # 
+      #   t <- WLR.bar*sqrt(n)/(hacsigma)
+      #   p <- pnorm(t)
+      #   best_csl <- "Not significally different"
+      #   if(is.na(p)){
+      #     best_csl <- "Not significally different"
+      #   }
+      #   else{
+      #     if(p<alpha/2){
+      #       best_csl <- "Density 2"
+      #     }
+      #     if(p>1-alpha/2){
+      #       best_csl <- "Density 1"
+      #     }
+      #   }
+    }
     
     Reject_r_count_cl[i,1]<-ifelse(best_cl == "Density 1" , 1 , 0)
     #Reject_r_count_csl[i,1]<-ifelse(best_csl == "Density 1" , 1 , 0)

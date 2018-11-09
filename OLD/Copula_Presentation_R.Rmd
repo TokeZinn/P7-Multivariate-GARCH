@@ -1,0 +1,144 @@
+---
+title: "Copula"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Setup
+The setup:
+
+- Simulate from a normal copula with $\rho = 0.8$ and 
+- Marginals $X \sim \mathcal{N}(0,4)$ and $Y \sim \text{Exp}(2)$ 
+
+```{r, echo=FALSE, results ='hide', fig.keep='all',message=FALSE,warning=FALSE, fig.height=3, fig.align='center'}
+library(copula);library(tidyverse)
+
+#Copula Construction 
+copula = normalCopula(param=c(0.8), dim=2, dispstr="un")
+distribution = mvdc(copula, margins = c("norm","exp"), paramMargins = list(list(mean = 0, sd = 2),list(rate = 2)))
+set.seed(711)
+data = rMvdc(1000,distribution)
+
+#Plots 
+data %>% as_tibble() %>% ggplot(aes(x = V1, y = V2)) + geom_point() +
+  scale_x_continuous(name = "X") + scale_y_continuous(name = "Y") -> P1
+
+P1
+```
+
+## Setup
+Code is: 
+
+
+```{r,eval=FALSE,highlight=TRUE,include=TRUE,echo=TRUE}
+library(copula);library(tidyverse)
+
+#Copula Construction 
+copula = normalCopula(param=c(0.8), dim=2, dispstr="un")
+distribution = mvdc(copula, 
+                    margins = c("norm","exp"), 
+                    paramMargins = list(list(mean = 0,
+                                             sd = 2),
+                                        list(rate = 2)))
+set.seed(711)
+data = rMvdc(1000,distribution)
+```
+## Simulated Data
+Histogram of $X$: 
+
+
+```{r, echo=FALSE, results ='hide', fig.keep='all',message=FALSE,warning=FALSE, fig.height=5, fig.align='center'}
+
+data %>% as_tibble() %>% ggplot(aes(x = V1)) + geom_histogram() + scale_x_continuous(name = "X")
+
+```
+
+## Simulated Data
+Histogram of $Y$: 
+
+
+```{r, echo=FALSE, results ='hide', fig.keep='all',message=FALSE,warning=FALSE, fig.height=5, fig.align='center'}
+
+data %>% as_tibble() %>% ggplot(aes(x = V2)) + geom_histogram() + scale_x_continuous(name = "Y")
+
+```
+
+## Marginals
+We first fit a normal to $X$. We use the MLE of the mean and variance $\hat\mu = \frac{1}{n}\sum_{i=1}^n X_i$ and $\hat\sigma^2 = \frac{1}{n}\sum_{i=1}^n (X_i-\hat\mu)^2$ and obtain: 
+
+| Variable      | Estimate      |
+|:-------------:|:-------------:|
+| $\sigma^2$    | $4.052$       |
+| $\mu$         | $0.071$       |
+
+## Marginals
+Then we fit an exponential to $Y$, again using MLE $\lambda = \frac{1}{\bar{y}}$, where $\bar{y} = \frac{1}{n}\sum_{i=1}^n y_i$: 
+
+| Variable      | Estimate      |
+|:-------------:|:-------------:|
+| $\lambda$     | $1.949$       |
+
+
+We then plot the probability transform to verify they are indeed (approximately) uniform. 
+
+## Probability Transform:
+First for $X$
+
+```{r, echo=FALSE, results ='hide', fig.keep='all',message=FALSE,warning=FALSE, fig.height=5, fig.align='center'}
+mu = mean(data[,1])
+sig = sd(data[,1])
+U_1 = pnorm(data[,1],mean = mu, sd = sig)
+hist(U_1,main = "Histogram",xlab = expression(U[1]))
+``` 
+
+## Probability Transform:
+Then for $Y$
+
+```{r, echo=FALSE, results ='hide', fig.keep='all',message=FALSE,warning=FALSE, fig.height=5, fig.align='center'}
+
+lambda = 1/mean(data[,2])
+U_2 = pexp(data[,2], rate = lambda)
+hist(U_2,xlab = expression(U[2]),main = "Histogram")
+
+```
+
+## Joint Dependence
+We then do a scatterplot of $U_1 = F_X(X), U_2 = F_Y(Y)$, which yields: 
+
+```{r, echo=FALSE, results ='hide', fig.keep='all',message=FALSE,warning=FALSE, fig.height=4, fig.align='center'}
+U = cbind(U_1, U_2)
+
+U %>% as_tibble() %>% ggplot(aes(x = U_1, y = U_2)) + geom_point() + 
+  scale_x_continuous(name = expr(U[1])) + scale_y_continuous(name = expr(U[2]))
+```
+
+## Fit Copulas 
+We then fit different copulas to $(U_1,U_2)$, and compare by AIC: 
+
+| Copula        | Parameters    | AIC   |
+| ------------- |:-------------:| -----:|
+| Normal        | $\hat\rho = 0.7960~(0.011)$ | $-1018.833$ |
+| t      | $\hat\rho = 0.7971~(0.011),~\hat\nu = 116.06$      |   $-1016.979$ |
+| Frank | $\hat\alpha = 7.606~(0.351)$ | $-946.075$ |
+| Joe  | $\hat\alpha = 2.581~(0.092)$ | $-757.010$ |
+| Gumbel | $\hat\alpha = 2.239~(0.07)$ | $-943.659$ |
+
+## Fit Copulas
+Code used is: 
+
+```{r,eval=FALSE,highlight=TRUE,include=TRUE,echo=TRUE}
+mu = mean(data[,1])
+sig = sd(data[,1])
+U_1 = pnorm(data[,1],mean = mu, sd = sig)
+lambda = 1/mean(data[,2])
+U_2 = pexp(data[,2], rate = lambda)
+U = cbind(U_1, U_2)
+norm_fit = fitCopula(normalCopula(dim = 2),data = U) 
+summary(norm_fit) 
+AIC(norm_fit)
+```
+
+

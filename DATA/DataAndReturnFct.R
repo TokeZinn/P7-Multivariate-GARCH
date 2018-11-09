@@ -1,4 +1,3 @@
-
 pacman::p_load(Quandl, tidyverse)
 
 # Returns func ----
@@ -120,4 +119,5 @@ remove(Index_Gold,Index_Oil)
 #Making a data frame
 Return_DF_OOS = cbind.data.frame(SP500_OOS, Gold_OOS$Value , Oil_OOS$Value ); names(Return_DF_OOS) = c("Date", "SP500_OOS", "Gold_OOS", "Oil_OOS")
 Return_DF_OOS = Return_DF_OOS %>% returns(series = c("SP500_OOS","Gold_OOS","Oil_OOS")) %>% mutate(Date = as.Date(Date))
+
 
