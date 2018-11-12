@@ -30,8 +30,17 @@ sim = simulateBEKK(3,100,params = para)
 cov(DF[(end-200):end,])
 
 
-
-
+Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
+                  mean.model = list( armaOrder = c(0,0) , include.mean = F) )
+for(j in 1:3){
+  g_matrix[,j] <- ugarchroll(spec = Spec,data = rbind(DF[(end-100):end,j],OS[1:10,j]),forecast.length = 10,
+                             refit.every = 10,refit.window = "moving",solver = "hybrid",
+                             calculate.VaR = F,window.size = is)
+}
+roll = ugarchroll(spec = Spec,data = rbind(as.matrix(DF[(end-200):end,1]),as.matrix(OS[1:10,1])),
+                  forecast.length = 10,
+           refit.every = 10,refit.window = "moving",solver = "hybrid",
+           calculate.VaR = F,window.size = length(DF[(end-200):end,1]))
 
 
 

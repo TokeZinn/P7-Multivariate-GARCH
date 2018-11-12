@@ -46,40 +46,7 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
   return(OneSigma)
   
 }
-RollingForecast = function(IS , OS ){
-  Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                    mean.model = list( armaOrder = c(0,0) , include.mean = F) )
-  All_Data = c( IS, OS)
-  
-  n = length(IS)
-  m = length(OS)
-  
-  OneSigma = rep(0,m)
-  
-  for (i in 1:m) {
-    Current_Data = All_Data[i:(n-1+i)]
-    if(i %% 5 == 0 | i == 1){
-      Fit <- ugarchfit(Spec, data = Current_Data , solver = "hybrid",cluster = cl)
-      omega <- Fit@fit$coef[1]
-      alpha <- Fit@fit$coef[2]
-      beta <- Fit@fit$coef[3]
-      H <- tail(Fit@fit$sigma,1)^2
-    }
-    else{
-      H <- omega + alpha*res^2 + beta*H
-    }
-    
-    res = Current_Data[n]
-    
-    H = omega + alpha*res^2 + beta*H
-    
-    OneSigma[i] = H %>% as.numeric()
-    
-  }
-  
-  return(OneSigma)
-  
-}
+
 
 
 MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
@@ -138,7 +105,7 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     #  H_g[[j]] <- diag(g_matrix[j,])
     #}
     for(j in 1:os){
-      H_g[[j]] <- cov(All_data[j:(j+is),])
+      H_g[[j]] <- cov(sim[j:(j+is),])
     }
     
     #CL

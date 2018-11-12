@@ -121,31 +121,31 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
       sim[,j] <- simbekk$eps[[j]]
     }
     H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),])
-    g_matrix <- matrix(0,ncol = 3,nrow = os)
+    #g_matrix <- matrix(0,ncol = 3,nrow = os)
     #for(j in 1:3){
     #  g_matrix[,j] <- RollingForecast(IS = sim[1:is,j],OS = sim[(is+1):(is+os),j])
     #}
     
-    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                     mean.model = list( armaOrder = c(0,0) , include.mean = F) )
-    for(j in 1:3){
-     g_matrix[,j] <- ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
-                                refit.every = 10,refit.window = "moving",solver = "hybrid",
-                                calculate.VaR = F,window.size = is)
-    }
+    #Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
+    #                  mean.model = list( armaOrder = c(0,0) , include.mean = F) )
+    #for(j in 1:3){
+    #  g_matrix[,j] <- ugarchroll(spec = Spec,data = All_data[,j],forecast.length = os,
+    #                             refit.every = 10,refit.window = "moving",solver = "hybrid",
+    #                             calculate.VaR = F,window.size = is)
+    #}
     H_g = list()
+    #for(j in 1:os){
+    #  H_g[[j]] <- diag(g_matrix[j,])
+    #}
     for(j in 1:os){
-     H_g[[j]] <- diag(g_matrix[j,])
+      H_g[[j]] <- cov(All_data[j:(j+is),])
     }
-    # for(j in 1:os){
-    #   H_g[[j]] <- cov(All_data[j:(j+is),])
-    # }
     
     #CL
     {
       Indy <- 1
-      S1 <- Indy*(log(f(sim[(is+1):(is+os),],H_f)/int1))
-      S2 <- Indy*(log(f(sim[(is+1):(is+os),],H_g)/int2))
+      S1 <- Indy*(log(f(sim[(is+1):(is+os),],H_g)/int1))
+      S2 <- Indy*(log(f(sim[(is+1):(is+os),],H_f)/int2))
       
       #browser()
       
@@ -213,9 +213,9 @@ OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 end = length(DF[,1]); end2 = length(OS[,1])
 set.seed(1)
 tic() ; Result = MC_power_Bekk(in.sample = DF[(end-100):end,],
-                          out.sample = OS[1:19,],B = 10); toc()
+                               out.sample = OS[1:19,],B = 10); toc()
 
-save(Result,file = "Garch_power_bekkvG.Rdata")
+save(Result,file = "Garch_power_bekkvCov.Rdata")
 
 
 
