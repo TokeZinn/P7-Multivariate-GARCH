@@ -1,7 +1,6 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch)
+pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch,matrixcalc)
 source("./DATA/DataAndReturnFct.R")
-cl = makePSOCKcluster(10)
 
 
 Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
@@ -105,7 +104,7 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     #  H_g[[j]] <- diag(g_matrix[j,])
     #}
     for(j in 1:os){
-      H_g[[j]] <- cov(sim[j:(j+is),])
+      H_g[[j]] <- cov(sim[j:(j+is-1),])
     }
     
     #CL
@@ -179,8 +178,8 @@ DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
 OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 end = length(DF[,1]); end2 = length(OS[,1])
 set.seed(1)
-tic() ; Result = MC_power_Bekk(in.sample = DF[(end-100):end,],
-                          out.sample = OS[1:19,],B = 10); toc()
+tic() ; Result = MC_power_Bekk(in.sample = DF[(end-250):end,],
+                          out.sample = OS,B = 100); toc()
 
 save(Result,file = "Garch_power_bekkvCov.Rdata")
 

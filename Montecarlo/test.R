@@ -8,7 +8,13 @@ cl = makePSOCKcluster(10)
 DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
 OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 end = length(DF[,1]); end2 = length(OS[,1])
+df = rbind(DF,OS)
 
+Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
+                  mean.model = list( armaOrder = c(0,0) , include.mean = F) )
+roll <- ugarchroll(spec = Spec,data = df[,1],forecast.length = length(OS[,1]),
+           refit.every = 10,refit.window = "moving",solver = "hybrid",
+           calculate.VaR = F,window.size = length(DF[,1]))
 
 Fit = BEKK(DF[(end-200):end,])
 
