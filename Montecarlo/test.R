@@ -49,4 +49,9 @@ roll = ugarchroll(spec = Spec,data = rbind(as.matrix(DF[(end-200):end,1]),as.mat
            calculate.VaR = F,window.size = length(DF[(end-200):end,1]))
 
 
+fit = ugarchfit(spec = Spec,data = df[,1],solver = "hybrid")
+
+sim <- ugarchsim(fit = fit,n.sim = length(df[,1]))
+
+
 

@@ -1,3 +1,4 @@
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(Quandl, tidyverse)
 
 # Returns func ----
@@ -56,7 +57,7 @@ returns = function(data, series = NULL, logreturns = T, Date = T){
 
 Oil = Quandl('OPEC/ORB' , start_date= "2007-12-31", end_date = "2017-12-31")
 Gold = Quandl('WGC/GOLD_DAILY_USD', start_date= "2007-12-31" , end_date = "2017-12-31")
-SP500 = read.csv("./^GSPC.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
+SP500 = read.csv("./DATA/^GSPC.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
 
 SP500$Date = SP500$Date %>% as.Date()
 Gold$Date = Gold$Date %>% as.Date()
@@ -94,7 +95,7 @@ Return_DF = Return_DF %>% returns(series = c("SP500","Gold","Oil")) %>% mutate(D
 # Data OOS ----
 Oil_OOS = Quandl('OPEC/ORB' , start_date= "2017-12-31", end_date = "2018-09-30")
 Gold_OOS = Quandl('WGC/GOLD_DAILY_USD', start_date= "2017-12-31" , end_date = "2018-09-30")
-SP500_OOS = read.csv("./^GSPC_OOS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
+SP500_OOS = read.csv("./DATA/^GSPC_OOS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
 
 SP500_OOS$Date = SP500_OOS$Date %>% as.Date()
 Gold_OOS$Date = Gold_OOS$Date %>% as.Date()
@@ -119,5 +120,4 @@ remove(Index_Gold,Index_Oil)
 #Making a data frame
 Return_DF_OOS = cbind.data.frame(SP500_OOS, Gold_OOS$Value , Oil_OOS$Value ); names(Return_DF_OOS) = c("Date", "SP500_OOS", "Gold_OOS", "Oil_OOS")
 Return_DF_OOS = Return_DF_OOS %>% returns(series = c("SP500_OOS","Gold_OOS","Oil_OOS")) %>% mutate(Date = as.Date(Date))
-
 

@@ -4,9 +4,8 @@ WLR.test = function(data,density1,
   n <- length(data[,1]);m <- length(data[1,])
   
   Y <- as.matrix(data)
-  #Y <- (data-mu)%*%solve(Hsqr)
-  
-    WLR <- (log(density1(Y))-log(density2(Y)))
+
+  WLR <- (log(density1(Y))-log(density2(Y)))
 
   WLR.bar <- sum(WLR)/n
   hacsigma <- sqrt( sum(WLR^2)/n )
