@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch)
+pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch,
+               matrixcalc)
 source("./DATA/DataAndReturnFct.R")
-cl = makePSOCKcluster(10)
 
 
 Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
@@ -41,40 +41,6 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
     OneSigma[[i]] = forecast
     
     #print(c("Iteration = ",i),sep="\n")
-  }
-  
-  return(OneSigma)
-  
-}
-RollingForecast = function(IS , OS ){
-  Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                    mean.model = list( armaOrder = c(0,0) , include.mean = F) )
-  All_Data = c( IS, OS)
-  
-  n = length(IS)
-  m = length(OS)
-  
-  OneSigma = rep(0,m)
-  
-  for (i in 1:m) {
-    Current_Data = All_Data[i:(n-1+i)]
-    if(i %% 5 == 0 | i == 1){
-      Fit <- ugarchfit(Spec, data = Current_Data , solver = "hybrid",cluster = cl)
-      omega <- Fit@fit$coef[1]
-      alpha <- Fit@fit$coef[2]
-      beta <- Fit@fit$coef[3]
-      H <- tail(Fit@fit$sigma,1)^2
-    }
-    else{
-      H <- omega + alpha*res^2 + beta*H
-    }
-    
-    res = Current_Data[n]
-    
-    H = omega + alpha*res^2 + beta*H
-    
-    OneSigma[i] = H %>% as.numeric()
-    
   }
   
   return(OneSigma)
@@ -128,19 +94,18 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     
     Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
+    
     for(j in 1:3){
-     g_matrix[,j] <- ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
-                                refit.every = 10,refit.window = "moving",solver = "hybrid",
-                                calculate.VaR = F,window.size = is)
+      roll = ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
+                        refit.every = 5,refit.window = "moving",solver = "hybrid",
+                        calculate.VaR = F,window.size = is)
+      g_matrix[,j] <- (roll@forecast$density$Sigma)^2
     }
     H_g = list()
     for(j in 1:os){
      H_g[[j]] <- diag(g_matrix[j,])
     }
-    # for(j in 1:os){
-    #   H_g[[j]] <- cov(All_data[j:(j+is),])
-    # }
-    
+
     #CL
     {
       Indy <- 1
