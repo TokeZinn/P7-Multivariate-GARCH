@@ -58,7 +58,8 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
     All_data = rbind(in.sample,out.sample)
     
-
+    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
+                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
     for(j in 1:3){
       assign(paste("Fit",j,sep = "_"),
              ugarchfit(spec = Spec,data = All_data[,j],solver = "hybrid"))
@@ -94,8 +95,6 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),])
     g_matrix <- matrix(0,ncol = 3,nrow = os)
 
-    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
     
     for(j in 1:3){
       roll = ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
