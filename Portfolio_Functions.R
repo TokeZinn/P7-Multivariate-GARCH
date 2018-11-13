@@ -29,18 +29,18 @@ Optimal_Portfolio_Desired = function(X, mu_b, Sigma = NULL){
   S_inv = solve(Sigma)
   e = rep(1,3)
   
-  #Minimum Variance Portfolio
-  w_min =  (1/drop(t(e) %*% S_inv %*% e))*S_inv %*% e 
-  mu_min = m %*% w_min
+  a = t(m) %*% S_inv %*% m
+  b = t(m) %*% S_inv %*% e
+  c = t(e) %*% S_inv %*% m
+  d = t(e) %*% S_inv %*% e
   
-  w_m = (1/drop(t(e) %*% S_inv %*% m))*S_inv %*% m
-  mu_m = m %*% w_m
+  l1 = (t((m - 0.1*e))%*% S_inv %*% m)/(a*d - b^2)
+  l2 = (-t((m - 0.1*e))%*% S_inv %*% e)/(a*d - b^2)
   
-  delta = drop(t(m) %*% S_inv %*% m)*drop(t(e) %*% S_inv %*% e) - drop((t(m) %*% S_inv %*% e))^2 
+  w = S_inv %*% (drop(l1)*e + drop(l2)*m)
   
-  alpha = mu_b*(drop(t(m) %*% S_inv %*% e)*drop(t(e) %*% S_inv %*% e) - drop((t(m) %*% S_inv %*% e))^2)/delta
+  return(w)
   
-  w = (1-alpha)*w_min + alpha*w_m
 }
 Optimal_Portfolio_Find = function(X, lambda, Sigma = NULL){
   #browser()
@@ -121,15 +121,34 @@ Efficient_Frontier = function(X,x, Sigma = NULL, short = T){
   return(list(upper,lower))
 }
 
-x = seq(from = 0, to = 2, by = 0.01)
-res = Efficient_Frontier(X,x)
+test_1 = Optimal_Portfolio_Desired(X,0.1)
+Sigma = (1/(nrow(X)-1))* (t(X-m) %*% (X-m))
+S_inv = solve(Sigma)
+e = rep(1,3)
 
-v1 = c(res[[1]],res[[2]])
-v2 = rep(x,2)
+a = t(m) %*% S_inv %*% m
+b = t(m) %*% S_inv %*% e
+c = t(e) %*% S_inv %*% m
+d = t(e) %*% S_inv %*% e
+del = (a*d - b^2)
+se = S_inv %*% e
+sm = S_inv %*% m
 
-V = rbind(v2,v1) %>% t() %>% as_tibble()
+l1 = (t((m - 0.1*e))%*% S_inv %*% m)/(a*d - b^2)
+l2 = (-t((m - 0.1*e))%*% S_inv %*% e)/(a*d - b^2)
 
-V %>% ggplot(aes(x = v2, y = v1)) + geom_point()
+test_2 = S_inv %*% (drop(l1)*e + drop(l2)*m)
+
+g = (1/drop(del))*(drop(a)*se- drop(b)*sm)
+
+h = (1/drop(del))*(drop(d)*sm- drop(b)*se)
 
 
-res[[1]][which(!is.nan(res[[1]]))]
+w_m = S_inv %*% e / drop(t(e) %*% S_inv %*% e)
+
+test_3 = g + h*0.1
+
+
+test_3/100
+
+test

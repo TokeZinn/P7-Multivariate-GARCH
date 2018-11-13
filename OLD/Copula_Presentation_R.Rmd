@@ -141,4 +141,72 @@ summary(norm_fit)
 AIC(norm_fit)
 ```
 
+## Remarks
+If one cannot decide which distribution the marginals have, but only want to test for dependencem one can use the **empical distribution function** 
+
+```{r,eval=FALSE,highlight=TRUE,include=TRUE,echo=TRUE}
+
+edf = function(x,X){
+  #browser()
+  sorted = rev(sort(X))
+  n = length(X)
+  s = 0 
+  for (i in 1:n){
+    s = s + (x >= sorted[i])
+  }
+  s = s/(n+1)
+  return(s)
+}
+
+X = rexp(1000) + rnorm(1000);x = rexp(1) + rnorm(1)
+
+```
+
+## Remarks
+We then see: 
+
+```{r, echo=FALSE, results ='hide', fig.keep='all',message=FALSE,warning=FALSE, fig.height=4, fig.align='center'}
+edf = function(x,X){
+  #browser()
+  sorted = rev(sort(X))
+  n = length(X)
+  s = 0 
+  for (i in 1:n){
+    s = s + (x >= sorted[i])
+  }
+  s = s/(n+1)
+  return(s)
+}
+X = rexp(1000) + rnorm(1000);
+edf_given = function(x){edf(x,X)}
+
+curve(edf_given, from = -4, to = 4,ylab = expression(EDF(x)))
+
+```
+
+## Remarks
+And using the probability transform: 
+
+```{r, echo=FALSE, results ='hide', fig.keep='all',message=FALSE,warning=FALSE, fig.height=4, fig.align='center'}
+edf = function(x,X){
+  #browser()
+  sorted = rev(sort(X))
+  n = length(X)
+  s = 0 
+  for (i in 1:n){
+    s = s + (x >= sorted[i])
+  }
+  s = s/(n+1)
+  return(s)
+}
+X = rexp(1000) + rnorm(1000);
+edf_given = function(x){edf(x,X)}
+
+hist(edf_given(X),main = "Histogram of Probability Transform",xlab = expression(EDF(X)))
+
+
+```
+
+
+
 

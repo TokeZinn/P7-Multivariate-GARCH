@@ -1,51 +1,9 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch,
                matrixcalc)
-source("./DATA/DataAndReturnFct.R")
+source("./DATA/DataAndReturnFct.R") ; source("../Rolling_BEKK.R")
 
 
-Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
-  #browser()
-  IS = IS %>% as.data.frame() ; OS = OS %>% as.data.frame() ; names(OS) <- names(IS)
-  All_Data = rbind(IS,OS) %>% as.matrix()
-  
-  n = length(IS[,1])
-  m = length(OS[,1])
-  
-  OneSigma = list()
-  
-  for (i in 1:m) {
-    Current_Data = All_Data[i:(n-1+i),]
-    
-    if(i %% 5 == 0 | i == 1){
-      Fit = BEKK(as.matrix(Current_Data),order = Spec,method = "BFGS",verbose=F)
-      
-      C = Fit$est.params[[1]]
-      A = Fit$est.params[[2]]
-      B = Fit$est.params[[3]] 
-      H = Fit$H.estimated[[n]]
-    }
-    else{
-      H = t(C)%*%C + t(A)%*%res%*%t(res)%*%A + t(B)%*%H%*%B
-    }
-    
-    
-    #res = c()
-    #for(j in 1:dim){
-    #  res = c(res,Fit$residuals[[j]][n])
-    #}
-    res = Current_Data[n,]
-    
-    forecast = t(C)%*%C + t(A)%*%res%*%t(res)%*%A + t(B)%*%H%*%B
-    
-    OneSigma[[i]] = forecast
-    
-    #print(c("Iteration = ",i),sep="\n")
-  }
-  
-  return(OneSigma)
-  
-}
 
 
 MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){

@@ -1,54 +1,13 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch,
                matrixcalc)
-source("./DATA/DataAndReturnFct.R")
+source("./DATA/DataAndReturnFct.R") ; source("../Rolling_BEKK.R")
 
 
-Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1)){
-  #browser()
-  IS = IS %>% as.data.frame() ; OS = OS %>% as.data.frame() ; names(OS) <- names(IS)
-  All_Data = rbind(IS,OS) %>% as.matrix()
-  
-  n = length(IS[,1])
-  m = length(OS[,1])
-  
-  OneSigma = list()
-  
-  for (i in 1:m) {
-    Current_Data = All_Data[i:(n-1+i),]
-    
-    if(i %% 5 == 0 | i == 1){
-      Fit = BEKK(as.matrix(Current_Data),order = Spec,method = "BFGS",verbose=F)
-      
-      C = Fit$est.params[[1]]
-      A = Fit$est.params[[2]]
-      B = Fit$est.params[[3]] 
-      H = Fit$H.estimated[[n]]
-    }
-    else{
-      H = t(C)%*%C + t(A)%*%res%*%t(res)%*%A + t(B)%*%H%*%B
-    }
-    
-    
-    #res = c()
-    #for(j in 1:dim){
-    #  res = c(res,Fit$residuals[[j]][n])
-    #}
-    res = Current_Data[n,]
-    
-    forecast = t(C)%*%C + t(A)%*%res%*%t(res)%*%A + t(B)%*%H%*%B
-    
-    OneSigma[[i]] = forecast
-    
-    #print(c("Iteration = ",i),sep="\n")
-  }
-  
-  return(OneSigma)
-  
-}
 
 
-MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
+
+MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BFGS"){
   #browser()
   {
     Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
@@ -57,7 +16,8 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     Reject_r_count_cl <- matrix(data = 0, nrow = B , ncol = 2)
     Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
     All_data = rbind(in.sample,out.sample)
-    
+    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
+                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
 
     for(j in 1:3){
       assign(paste("Fit",j,sep = "_"),
@@ -91,11 +51,10 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     sim[,2] <- simG_2@simulation$seriesSim
     sim[,3] <- simG_3@simulation$seriesSim
     
-    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),])
+    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),], optim = optim)
     g_matrix <- matrix(0,ncol = 3,nrow = os)
 
-    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
+    
     
     for(j in 1:3){
       roll = ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
@@ -156,7 +115,7 @@ OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 end = length(DF[,1]); end2 = length(OS[,1])
 set.seed(1)
 tic() ; Result = MC_power_Bekk(in.sample = DF[(end-250):end,],
-                               out.sample = OS[1:187,],B = 100); toc()
+                               out.sample = OS[1:187,],B = 100,optim = "Nelder-Mead"); toc()
 
 save(Result,file = "Garch_power_GvBekk.Rdata")
 
