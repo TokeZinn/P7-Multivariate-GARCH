@@ -147,16 +147,19 @@ If one cannot decide which distribution the marginals have, but only want to tes
 ```{r,eval=FALSE,highlight=TRUE,include=TRUE,echo=TRUE}
 
 edf = function(x,X){
-  #browser()
-  sorted = rev(sort(X))
+  browser()
+  sorted = sort(X)
   n = length(X)
+  
   s = 0 
   for (i in 1:n){
-    s = s + (x >= sorted[i])
+    s = s + (sorted[i] <= x)
   }
+  
   s = s/(n+1)
   return(s)
 }
+
 
 X = rexp(1000) + rnorm(1000);x = rexp(1) + rnorm(1)
 
