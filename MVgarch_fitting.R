@@ -10,7 +10,7 @@ DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
 OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 
 
-Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3){
+Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,optim = "BFGS"){
   #browser()
   IS = IS %>% as.data.frame() ; OS = OS %>% as.data.frame() ; names(OS) <- names(IS)
   All_Data = rbind(IS,OS) %>% as.matrix()
@@ -23,7 +23,7 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3){
   for (i in 1:m) {
     Current_Data = All_Data[i:(n-1+i),]
     
-    Fit = BEKK(as.matrix(Current_Data),order = Spec,method = "BFGS",verbose=F)
+    Fit = BEKK(as.matrix(Current_Data),order = Spec,method = optim,verbose=F)
     
     C = Fit$est.params[[1]]
     A = Fit$est.params[[2]]
@@ -48,8 +48,17 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3){
 }
 
 end = length(DF[,1]); end2 = length(OS[,1])
-tic (); mod = Rolling_BEKK(DF[(end-100):end,],OS[(end2-100):end2,],c(1,1),dim = 3);toc()
+tic (); mod = Rolling_BEKK(DF[(end-100):end,],OS[(end2-100):end2,],c(1,1),dim = 3,
+                           optim = "Nelder-Mead");toc()
 mod = Rolling_BEKK(DF,OS,c(1,1),dim = 3)
+
+
+fit = BEKK(rbind(DF,OS))
+
+v = c()
+for(i in 1:2703){
+  v = c(v,fit$H.estimated[[i]][1,1])
+}
 
 
 

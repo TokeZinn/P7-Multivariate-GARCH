@@ -1,4 +1,4 @@
-MC_power_DCC <- function(in.sample,out.sample,alpha = 0.05,B = 100){
+DCCvUgarch_power <- function(in.sample,out.sample,alpha = 0.05,B = 100){
   #browser()
   {
     Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
@@ -26,7 +26,7 @@ MC_power_DCC <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     f <- function(x,H){
       d = c()
       for(num in 1:os){
-        d[num] <- emdbook::dmvnorm(x,mu = rep(0,3),Sigma = H[[num]])
+        d[num] <- emdbook::dmvnorm(x[num,],mu = rep(0,3),Sigma = H[[num]])
       }
       return(d)
     }
@@ -51,7 +51,7 @@ MC_power_DCC <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     g_matrix <- matrix(0,ncol = 3,nrow = os)
     for(j in 1:3){
       roll = ugarchroll(spec = xspec,data = sim[,j],forecast.length = os,
-                        refit.every = 5,refit.window = "moving",solver = "hybrid",
+                        refit.every = 1,refit.window = "moving",solver = "hybrid",
                         calculate.VaR = F,window.size = is)
       g_matrix[,j] <- (roll@forecast$density$Sigma)^2
     }
