@@ -53,6 +53,14 @@ tic (); mod = Rolling_BEKK(DF[(end-100):end,],OS[(end2-100):end2,],c(1,1),dim = 
 mod = Rolling_BEKK(DF,OS,c(1,1),dim = 3)
 
 
+fit = BEKK(rbind(DF,OS))
+
+v = c()
+for(i in 1:2703){
+  v = c(v,fit$H.estimated[[i]][1,1])
+}
+
+
 
 sig1 = c()
 

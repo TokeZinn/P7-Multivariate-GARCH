@@ -1,4 +1,4 @@
-MC_power_DCC <- function(in.sample,out.sample,alpha = 0.05,B = 100){
+DCCvCOV_power <- function(in.sample,out.sample,alpha = 0.05,B = 100){
   #browser()
   {
     Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
@@ -7,7 +7,7 @@ MC_power_DCC <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     Reject_r_count_cl <- matrix(data = 0, nrow = B , ncol = 2)
     Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
     All_data = rbind(in.sample,out.sample)
-
+    
     
     xspec <- ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
                         mean.model = list( armaOrder = c(0,0) , include.mean = F) )
@@ -26,7 +26,7 @@ MC_power_DCC <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     f <- function(x,H){
       d = c()
       for(num in 1:os){
-        d[num] <- emdbook::dmvnorm(x,mu = rep(0,3),Sigma = H[[num]])
+        d[num] <- emdbook::dmvnorm(x[num,],mu = rep(0,3),Sigma = H[[num]])
       }
       return(d)
     }
@@ -38,6 +38,8 @@ MC_power_DCC <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     simdcc <- dccsim(fitORspec = Fit,n.sim = is+os)
     sim <- as.matrix(simdcc@msim$simX[[1]])
     #browser()
+    
+    
     multfsim = multifit(uspec, sim, cluster = cl,out.sample = os,solver = "hybrid")
     fit <- dccfit(Spec, data = sim, fit.control = list(eval.se = TRUE),
                   fit = multfsim, cluster = cl,out.sample = os,solver = "solnp")
@@ -48,18 +50,13 @@ MC_power_DCC <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     }
     
     
-    g_matrix <- matrix(0,ncol = 3,nrow = os)
-    for(j in 1:3){
-      roll = ugarchroll(spec = xspec,data = sim[,j],forecast.length = os,
-                        refit.every = 5,refit.window = "moving",solver = "hybrid",
-                        calculate.VaR = F,window.size = is)
-      g_matrix[,j] <- (roll@forecast$density$Sigma)^2
-    }
-    
     H_g = list()
     for(j in 1:os){
-      H_g[[j]] <- diag(g_matrix[j,])
+      H_g[[j]] <- cov(sim[j:(j+is-1),])
     }
+    
+
+    
     
     #CL
     {

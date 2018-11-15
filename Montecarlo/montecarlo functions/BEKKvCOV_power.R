@@ -1,12 +1,4 @@
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch,
-               matrixcalc)
-source("./DATA/DataAndReturnFct.R") ; source("../Rolling_BEKK.R")
-
-
-
-
-MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
+BEKKvCOV_power <- function(in.sample,out.sample,alpha = 0.05,B = 100,optim = "BFGS",refit = 1){
   #browser()
   {
     Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
@@ -16,21 +8,23 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
     All_data = rbind(in.sample,out.sample)
     
-    Fit <- BEKK(All_data)
+    Fit <- BEKK(All_data,method = optim)
+    
+    
     H_list <- Fit$H.estimated
     Parameters = c(vech(t(Fit$est.params[[1]])))
     for(i in 2:length(Fit$est.params)){
       Parameters = c(Parameters,vec(Fit$est.params[[i]]))
     }
-    
-    
+      
+      
     int1 = 1
     int2 = 1
     
     f <- function(x,H){
       d = c()
       for(num in 1:os){
-        d[num] <- emdbook::dmvnorm(x,mu = rep(0,3),Sigma = H[[num]])
+        d[num] <- emdbook::dmvnorm(x[num,],mu = rep(0,3),Sigma = H[[num]])
       }
       return(d)
     }
@@ -44,26 +38,14 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     for(j in 1:3){
       sim[,j] <- simbekk$eps[[j]]
     }
-    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),])
-    g_matrix <- matrix(0,ncol = 3,nrow = os)
-    #for(j in 1:3){
-    #  g_matrix[,j] <- RollingForecast(IS = sim[1:is,j],OS = sim[(is+1):(is+os),j])
-    #}
-    
-    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                     mean.model = list( armaOrder = c(0,0) , include.mean = F) )
-    
-    for(j in 1:3){
-      roll = ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
-                        refit.every = 5,refit.window = "moving",solver = "hybrid",
-                        calculate.VaR = F,window.size = is)
-      g_matrix[,j] <- (roll@forecast$density$Sigma)^2
-    }
-    H_g = list()
-    for(j in 1:os){
-     H_g[[j]] <- diag(g_matrix[j,])
-    }
+    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),],optim = optim,refit = refit)
 
+    H_g = list()
+
+    for(j in 1:os){
+      H_g[[j]] <- cov(sim[j:(j+is-1),])
+    }
+    
     #CL
     {
       Indy <- 1
@@ -122,6 +104,7 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     Reject_r_count_cl[i,2] <- ifelse(best_cl == "Density 2" , 1 , 0)
     #Reject_r_count_csl[i,2] <- ifelse(best_csl == "Density 2" , 1 , 0)
     print(c("i = ", i))
+    print(c("Best =",best_cl))
   }
   #browser()
   j = 1
@@ -131,14 +114,6 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100){
   return(list(Reject_Matrix_cl,Reject_Matrix_csl))
 }
 
-DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
-OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
-end = length(DF[,1]); end2 = length(OS[,1])
-set.seed(1)
-tic() ; Result = MC_power_Bekk(in.sample = DF[(end-100):end,],
-                          out.sample = OS[1:19,],B = 10); toc()
-
-save(Result,file = "Garch_power_bekkvG.Rdata")
 
 
 

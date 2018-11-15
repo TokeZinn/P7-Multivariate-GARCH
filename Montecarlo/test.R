@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch,matrixcalc)
 source("./DATA/DataAndReturnFct.R")
-cl = makePSOCKcluster(10)
+cl = makePSOCKcluster(3)
 
 
 
@@ -16,7 +16,7 @@ roll <- ugarchroll(spec = Spec,data = df[,1],forecast.length = length(OS[,1]),
            refit.every = 10,refit.window = "moving",solver = "hybrid",
            calculate.VaR = F,window.size = length(DF[,1]))
 
-Fit = BEKK(DF[(end-200):end,])
+Fit = BEKK(DF[(end-250):end,])
 
 para = c(vech(t(Fit$est.params[[1]])))
 for(i in 2:length(Fit$est.params)){
@@ -52,6 +52,8 @@ roll = ugarchroll(spec = Spec,data = rbind(as.matrix(DF[(end-200):end,1]),as.mat
 fit = ugarchfit(spec = Spec,data = df[,1],solver = "hybrid")
 
 sim <- ugarchsim(fit = fit,n.sim = length(df[,1]))
-
-
+v = c()
+for(i in 1:201){
+  v = c(v,Fit$H.estimated[[i]][1,1])
+}
 

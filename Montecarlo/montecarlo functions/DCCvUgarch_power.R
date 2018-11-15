@@ -1,13 +1,4 @@
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-pacman::p_load(cubature,emdbook,MASS,mvtnorm,tictoc,parallel,mgarchBEKK,tidyverse,rugarch,
-               matrixcalc)
-source("./DATA/DataAndReturnFct.R") ; source("../Rolling_BEKK.R")
-
-
-
-
-
-MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BFGS"){
+DCCvUgarch_power <- function(in.sample,out.sample,alpha = 0.05,B = 100){
   #browser()
   {
     Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
@@ -16,14 +7,18 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BF
     Reject_r_count_cl <- matrix(data = 0, nrow = B , ncol = 2)
     Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
     All_data = rbind(in.sample,out.sample)
-    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
 
-    for(j in 1:3){
-      assign(paste("Fit",j,sep = "_"),
-             ugarchfit(spec = Spec,data = All_data[,j],solver = "hybrid"))
-    }
-    fits <- list(Fit_1,Fit_2,Fit_3) 
+    
+    xspec <- ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
+                        mean.model = list( armaOrder = c(0,0) , include.mean = F) )
+    uspec <- multispec(replicate(3,xspec))
+    Spec <- dccspec(uspec = uspec,dccOrder = c(1, 1), distribution = 'mvnorm')
+    
+    cl = makePSOCKcluster(3)
+    multf = multifit(uspec, All_data, cluster = cl,out.sample = 0,solver = "hybrid")
+    
+    Fit <- dccfit(Spec, data = All_data, fit.control = list(eval.se = TRUE),
+                  fit = multf, cluster = cl,out.sample = 0,solver = "solnp")
     
     int1 = 1
     int2 = 1
@@ -31,34 +26,32 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BF
     f <- function(x,H){
       d = c()
       for(num in 1:os){
-        d[num] <- emdbook::dmvnorm(x,mu = rep(0,3),Sigma = H[[num]])
+        d[num] <- emdbook::dmvnorm(x[num,],mu = rep(0,3),Sigma = H[[num]])
       }
       return(d)
     }
     
   }
   
-  #sim <- list()
   for(i in 1:B){
     
-    for(j in 1:3){
-      assign(paste("simG",j,sep = "_"),
-             ugarchsim(fit = fits[[1]],n.sim = length(All_data[,1])))
+    simdcc <- dccsim(fitORspec = Fit,n.sim = is+os)
+    sim <- as.matrix(simdcc@msim$simX[[1]])
+    #browser()
+    multfsim = multifit(uspec, sim, cluster = cl,out.sample = os,solver = "hybrid")
+    fit <- dccfit(Spec, data = sim, fit.control = list(eval.se = TRUE),
+                  fit = multfsim, cluster = cl,out.sample = os,solver = "solnp")
+    Forecast <- dccforecast(fit, n.roll = os-1,cluster = cl)
+    H_f <- Forecast@mforecast$H
+    for(j in 1:os){
+      H_f[[j]] <- H_f[[j]] %>%  as.data.frame() %>% as.matrix()
     }
-
-    sim <- matrix(0,nrow = is+os,ncol = 3)
-    sim[,1] <- simG_1@simulation$seriesSim
-    sim[,2] <- simG_2@simulation$seriesSim
-    sim[,3] <- simG_3@simulation$seriesSim
     
-    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),], optim = optim)
+    
     g_matrix <- matrix(0,ncol = 3,nrow = os)
-
-    
-    
     for(j in 1:3){
-      roll = ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
-                        refit.every = 5,refit.window = "moving",solver = "hybrid",
+      roll = ugarchroll(spec = xspec,data = sim[,j],forecast.length = os,
+                        refit.every = 1,refit.window = "moving",solver = "hybrid",
                         calculate.VaR = F,window.size = is)
       g_matrix[,j] <- (roll@forecast$density$Sigma)^2
     }
@@ -94,7 +87,7 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BF
           best_cl <- "Density 1"
         }
       }}
-
+    
     
     Reject_r_count_cl[i,1]<-ifelse(best_cl == "Density 1" , 1 , 0)
     #Reject_r_count_csl[i,1]<-ifelse(best_csl == "Density 1" , 1 , 0)
@@ -107,17 +100,9 @@ MC_power_Bekk <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BF
   Reject_Matrix_cl[j,] <- c(sum(Reject_r_count_cl[,1])/B,sum(Reject_r_count_cl[,2])/B)
   Reject_Matrix_csl[j,] <- c(sum(Reject_r_count_csl[,1])/B,sum(Reject_r_count_csl[,2])/B)
   
+  stopCluster(cl)
   return(list(Reject_Matrix_cl,Reject_Matrix_csl))
 }
-
-DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
-OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
-end = length(DF[,1]); end2 = length(OS[,1])
-set.seed(1)
-tic() ; Result = MC_power_Bekk(in.sample = DF[(end-250):end,],
-                               out.sample = OS[1:187,],B = 100,optim = "Nelder-Mead"); toc()
-
-save(Result,file = "Garch_power_GvBekk.Rdata")
 
 
 

@@ -18,6 +18,9 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1),optim = "BFGS",r
       A = Fit$est.params[[2]]
       B = Fit$est.params[[3]] 
       H = Fit$H.estimated[[n]]
+      if(i %% (refit*5) == 0){
+        print(c("Subiteration = ",i))
+      }
     }
     else{
       H = t(C)%*%C + t(A)%*%res%*%t(res)%*%A + t(B)%*%H%*%B
