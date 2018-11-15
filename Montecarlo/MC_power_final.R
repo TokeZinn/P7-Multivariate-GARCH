@@ -15,27 +15,27 @@ end <- length(DF[,1]); end2 = length(OS[,1]) ; end3 <- length(df[,1])
 
 set.seed(100)
 tic() ; Powers_BvC = BEKKvCOV_power(in.sample = df[(end3-750):(end3-500),],
-                              out.sample = df[(end3-499):end3,],B = 100,refit = 5,
+                              out.sample = df[(end3-499):end3,],B = 1000,refit = 5,
                               optim = "Nelder-Mead"); toc()
 save(Powers_BvC,file = "BEKKvCOV_result.Rdata")
 
 
 set.seed(400)
 tic() ; Powers_DCCvUgarch = DCCvUgarch_power(in.sample = df[(end3-750):(end3-500),],
-                                    out.sample = df[(end3-499):end3,],B = 100); toc()
+                                    out.sample = df[(end3-499):end3,],B = 1000); toc()
 stopCluster(cl)
 save(Powers_DCCvUgarch,file = "DCCvUgarch_result.Rdata")
 
 
 set.seed(200)
 tic() ; Powers_BvU = BEKKvUgarch_power(in.sample = df[(end3-750):(end3-500),],
-                                    out.sample = df[(end3-499):end3,],B = 100,refit = 10,
+                                    out.sample = df[(end3-499):end3,],B = 1000,refit = 10,
                                     optim = "Nelder-Mead"); toc()
 save(Powers_BvU,file = "BEKKvUgarch_result.Rdata")
 
 set.seed(700)
 tic() ; Powers_DCCvCOV = DCCvCOV_power(in.sample = df[(end3-750):(end3-500),],
-                                       out.sample = df[(end3-499):end3,],B = 100); toc()
+                                       out.sample = df[(end3-499):end3,],B = 1000); toc()
 stopCluster(cl)
 save(Powers_DCCvCOV,file = "DCCvCOV_result.Rdata")
 
