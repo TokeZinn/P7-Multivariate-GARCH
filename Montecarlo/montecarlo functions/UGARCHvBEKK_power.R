@@ -7,15 +7,10 @@ UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim =
     Reject_r_count_cl <- matrix(data = 0, nrow = B , ncol = 2)
     Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
     All_data = rbind(in.sample,out.sample)
-<<<<<<< HEAD:Montecarlo/MC_garch_power_simbekk3.R
     
     Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
                       mean.model = list( armaOrder = c(0,0) , include.mean = F) )
-=======
-    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
 
->>>>>>> 8441be2671b17b0b0841a0fcf47fe0f07f7714e3:Montecarlo/montecarlo functions/UGARCHvBEKK_power.R
     for(j in 1:3){
       assign(paste("Fit",j,sep = "_"),
              ugarchfit(spec = Spec,data = All_data[,j],solver = "hybrid"))
@@ -51,11 +46,6 @@ UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim =
     H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),], optim = optim)
     g_matrix <- matrix(0,ncol = 3,nrow = os)
 
-<<<<<<< HEAD:Montecarlo/MC_garch_power_simbekk3.R
-=======
-    
->>>>>>> 8441be2671b17b0b0841a0fcf47fe0f07f7714e3:Montecarlo/montecarlo functions/UGARCHvBEKK_power.R
-    
     for(j in 1:3){
       roll = ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
                         refit.every = 5,refit.window = "moving",solver = "hybrid",
