@@ -1,4 +1,5 @@
-UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BFGS"){
+UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BFGS0",
+                              refit = 10){
   #browser()
   {
     Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
@@ -43,12 +44,12 @@ UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim =
     sim[,2] <- simG_2@simulation$seriesSim
     sim[,3] <- simG_3@simulation$seriesSim
     
-    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),], optim = optim)
+    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),], optim = optim,refit = refit)
     g_matrix <- matrix(0,ncol = 3,nrow = os)
 
     for(j in 1:3){
       roll = ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
-                        refit.every = 5,refit.window = "moving",solver = "hybrid",
+                        refit.every = refit,refit.window = "moving",solver = "hybrid",
                         calculate.VaR = F,window.size = is)
       g_matrix[,j] <- (roll@forecast$density$Sigma)^2
     }
