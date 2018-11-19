@@ -1,4 +1,4 @@
-source("./DataAndReturnFct.R")
+source("DATA/DataAndReturnFct.R")
 
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
