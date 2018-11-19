@@ -2,9 +2,9 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(ggplot2,tidyverse)
 source("../Multiplot.R")
 
-load("Powerdf5.Rdata")
-
-
+# Simple normal and t
+{
+load("./Results/Powerdf5.Rdata")
 CL <- h2[[1]]
 CSL <- h2[[2]]
 Power <- cbind(CL,CSL) %>% as.data.frame(); colnames(Power) <- c("CL_Power","CL_Spur","CSL_Power","CSL_Spur")
@@ -34,7 +34,7 @@ multiplot(p1,p2,cols = 2)
 
 
 
-load("MC_power_t.Rdata")
+load("./Results/MC_power_t.Rdata")
 
 
 CL_t <- h[[1]]
@@ -70,7 +70,32 @@ p1x <- ggplot(data = Power[,c(1,3)]) +
   theme(legend.title=element_blank()) + ggtitle("True Power") +
   theme(legend.position="bottom")
 
-
 multiplot(p3,p1x,cols=2)
+}
+
+
+load("./Results/BEKKvCOV_result.Rdata")
+load("./Results/BEKKvUgarch_result.Rdata")
+load("./Results/DCCvCOV_result.Rdata")
+load("./Results/DCCvUgarch_result.Rdata")
+load("./Results/UGARCHvBEKK.Rdata")
+
+
+
+
+Powers_UGARCHvBEKK
+Powers_BvC
+Powers_BvU
+Powers_DCCvCOV
+Powers_DCCvUgarch
+
+
+
+
+
+
+
+
+
 
 

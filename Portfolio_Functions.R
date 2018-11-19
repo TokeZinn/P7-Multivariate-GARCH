@@ -1,3 +1,4 @@
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("./DATA/DataAndReturnFct.R")
 
 Return_DF %>% dplyr::select(Returns_SP500, Returns_Gold, Returns_Oil) %>% as.matrix() -> X
@@ -70,8 +71,8 @@ Optimal_Portfolio_Desired = function(X, mu_b, Sigma = NULL){
   c = t(e) %*% S_inv %*% m
   d = t(e) %*% S_inv %*% e
   
-  l1 = (t((m - 0.1*e))%*% S_inv %*% m)/(a*d - b^2)
-  l2 = (-t((m - 0.1*e))%*% S_inv %*% e)/(a*d - b^2)
+  l1 = (t((m - mu_b*e))%*% S_inv %*% m)/(a*d - b^2)
+  l2 = (-t((m - mu_b*e))%*% S_inv %*% e)/(a*d - b^2)
   
   w = S_inv %*% (drop(l1)*e + drop(l2)*m)
   
@@ -156,3 +157,50 @@ Efficient_Frontier = function(X,x, Sigma = NULL, short = T){
   
   return(list(upper,lower))
 }
+
+
+m = apply(X = X,MARGIN = 2,FUN = mean)
+S = (1/nrow(X))*(t(X-m) %*% (X-m))
+
+
+mu_b = seq(from = -0.01, to = 0.05, by = 0.0001)
+weights = lapply(mu_b,FUN = function(x){Optimal_Portfolio_Desired(X = X,mu_b = x)})
+sigma = lapply(weights, function(x){sqrt(t(x) %*% S %*% x)}) %>% unlist()
+
+
+SP500_m = m[1]
+Gold_m = m[2]
+Oil_m = m[3]
+
+SP500_s = sqrt(S[1,1])
+Gold_s = sqrt(S[2,2])
+Oil_s = sqrt(S[3,3])
+
+w_mv = Min_Variance_Port(X)
+mv_m = t(w_mv) %*% m 
+mv_s = sqrt(t(w_mv) %*% S %*% w_mv)
+
+
+
+M = c(mu_b,SP500_m,Gold_m,Oil_m,mv_m)
+V = c(sigma,SP500_s,Gold_s,Oil_s,mv_s )
+L = c(rep("Efficient Frontier",length(mu_b)), "SP500", "Gold","Oil","Minimum Variance")
+
+
+
+dataframe = data.frame(M,V,L)
+names(dataframe) = c("Mean","Sigma","Portfolio")
+dataframe %>% mutate(Upper = Mean >= rep(mv_m,605)) -> dataframe
+
+c(1,2) %in% c(2,3)
+
+plot(dataframe[,2],dataframe[,1], type = "l")
+
+min_var
+
+dataframe %>% filter(Portfolio %in% c("Efficient Frontier")) %>% ggplot(aes(x = Sigma, y = Mean, group = Upper)) + 
+  geom_line(stat = "Identity") + 
+  geom_point(data = dataframe %>% filter(!(Portfolio %in% c("Efficient Frontier"))), aes(x = Sigma, y = Mean, color = Portfolio),size = 4) +
+  scale_color_manual(values = c("#CCCC00","#f44141","#333333","#619CFF")) + ggtitle("Efficient Frontier") + xlab(expression(sigma)) +
+  ylab(expression(mu))
+  

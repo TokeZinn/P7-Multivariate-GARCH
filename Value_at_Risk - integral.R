@@ -57,7 +57,7 @@ VaR = function(w, mu, Sigma, distribution = "normal", alpha = 0.05){
   rotate_distribution.t = function(dist){
     f = function(x){
       x = R(x,M)
-      v = 
+      v = 3
       del = (mu/sqrt(v/2))*(gamma(v/2)/gamma((v-1)/2))
       y = mvtnorm::dmvt(x = x,delta = mu, sigma = ((v-2)/v)*Sigma, df = v,log = F)
       return(y)
@@ -112,6 +112,11 @@ VaR = function(w, mu, Sigma, distribution = "normal", alpha = 0.05){
   return(tau_c * norm(w,"2"))
 }
 
-VaR(w,m,S, alpha = 0.3)
 
+h_0 = VaR(w,m,S, alpha = 0.05)
+h_1 = VaR(w,m,S, alpha = 0.01)
+h_2 = VaR(w,m,S, alpha = 0.1)
 
+h_0_a = drop(t(w) %*% m + qnorm(0.05)*sqrt((t(w) %*% S %*% w)))
+h_1_a = drop(t(w) %*% m + qnorm(0.01)*sqrt((t(w) %*% S %*% w)))
+h_2_a = drop(t(w) %*% m + qnorm(0.1)*sqrt((t(w) %*% S %*% w)))

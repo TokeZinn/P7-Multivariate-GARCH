@@ -12,6 +12,8 @@ DF <-  Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
 OS <- Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 df <- rbind(DF,OS)
 end <- length(DF[,1]); end2 = length(OS[,1]) ; end3 <- length(df[,1])
+colnames(Return_DF_OOS) <- colnames(Return_DF)
+df_total <- rbind(Return_DF,Return_DF_OOS)
 
 set.seed(100)
 tic() ; Powers_BvC = BEKKvCOV_power(in.sample = df[(end3-750):(end3-500),],
