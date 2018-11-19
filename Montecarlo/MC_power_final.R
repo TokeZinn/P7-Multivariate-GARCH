@@ -22,11 +22,12 @@ tic() ; Powers_BvC = BEKKvCOV_power(in.sample = df[(end3-750):(end3-500),],
 save(Powers_BvC,file = "BEKKvCOV_result.Rdata")
 
 
-set.seed(400)
+set.seed(100)
 tic() ; Powers_DCCvUgarch = DCCvUgarch_power(in.sample = df[(end3-750):(end3-500),],
                                     out.sample = df[(end3-499):end3,],B = 1000); toc()
-stopCluster(cl)
 save(Powers_DCCvUgarch,file = "DCCvUgarch_result.Rdata")
+stopCluster(cl)
+
 
 
 set.seed(200)
