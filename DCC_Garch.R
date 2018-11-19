@@ -36,13 +36,19 @@ for(i in 1:os){
 }
 stopCluster(cl)
 
+ucast <- multiforecast(multifitORspec = multf, data = Data, n.ahead = 1, n.roll = os-1,
+                       out.sample = os,cluster = cl)
 
 g_matrix <- matrix(0,ncol = 3,nrow = os)
 for(j in 1:3){
-  roll = ugarchroll(spec = xspec,data = Data[,j],forecast.length = os,
-                    refit.every = 1,refit.window = "moving",solver = "hybrid",
-                    calculate.VaR = F,window.size = is)
-  g_matrix[,j] <- (roll@forecast$density$Sigma)^2
+  forc <- ucast@forecast[[j]]
+  g_matrix[,j] <- (forc@forecast$sigmaFor)^2
+}
+
+
+H_g = list()
+for(j in 1:os){
+  H_g[[j]] <- diag(g_matrix[j,])
 }
 
 H_g = list()
@@ -60,12 +66,13 @@ H_diff
 
 cl = makePSOCKcluster(3)
 sim <- dccsim(fitORspec = Fit,n.sim = is+os)
+
+df <- as.matrix(sim@msim$simX)
+multfsim = multifit(uspec, data = df[[1]], cluster = cl,out.sample = os,solver = "hybrid")
+Fitsim <- dccfit(Spec, data = df[[1]], fit.control = list(eval.se = TRUE),
+              fit = multfsim, cluster = cl,out.sample = os,solver = "solnp")
+
 stopCluster(cl)
-
-
-
-
-
 
 
 
