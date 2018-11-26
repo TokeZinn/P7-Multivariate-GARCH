@@ -13,7 +13,7 @@ OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 end = length(DF[,1]); end2 = length(OS[,1])
 tic (); mod = Rolling_BEKK(DF,OS,c(1,1),dim = 3,
                            optim = "Nelder-Mead");toc()
-
+save(mod,file = "BEKK_forecasts.Rdata")
 
 
 fit = BEKK(rbind(DF,OS))
