@@ -4,7 +4,7 @@ pacman::p_load(Quandl, tidyverse)
 # Returns func ----
 
 #Function for Calculating Returns
-returns = function(data, series = NULL, logreturns = T, Date = T){
+returns = function(data, series = NULL, logreturns = T, Date = T,demean = T){
   if(is.vector(data)){
     if(logreturns){
       return(100*c(NA,log(data[2:length(data)]) - log(data[2:length(data)-1]))) 
@@ -40,6 +40,11 @@ returns = function(data, series = NULL, logreturns = T, Date = T){
   
   if(logreturns){
     return_matrix = 100*(log(placeholder[2:n,]) - log(placeholder[2:n - 1,]))
+    if(demean){
+      for(i in 1:length(return_matrix[1,])){
+        return_matrix[,i] <- return_matrix[,i] - mean(return_matrix[,i])
+      }
+    }
     result = as.tibble(cbind(as.matrix(data[2:n,]),return_matrix))
     names(result) = c(name_data,name_returns)
   }else{
