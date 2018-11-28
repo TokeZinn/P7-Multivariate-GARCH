@@ -15,11 +15,13 @@ os <- length(OS[,1]) ; is <- length(IS[,1])
 
 tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
                            optim = "Nelder-Mead");toc()
-save(H_bekk,file = "BEKK_forecasts_1000.Rdata")
+save(H_bekk,file = "BEKK_forecasts_1000_nelder.Rdata")
 
 
 
-
+tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
+                              optim = "BFGS");toc()
+save(H_bekk,file = "BEKK_forecasts_1000_BFGS.Rdata")
 
 
 
