@@ -1,5 +1,5 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-pacman::p_load(tidyverse)
+pacman::p_load(tidyverse, mgarchBEKK, rugarch, tictoc,rmgarch,parallel)
 
 source("./DATA/DataAndReturnFct.R")
 
@@ -97,9 +97,11 @@ NonParaEmpericalVarChecker = function(IS, OS , alpha = 0.05){
 
 #Compute empirical VaR using a list
 
+
 load("./Forecasts/BEKK_forecasts.Rdata"); H_BEKK = mod; remove(mod)
 load("./Forecasts/DCC_forecasts.Rdata")
 load("./Forecasts/uGARCH_forecasts.Rdata")
+load("./Forecasts/Benchmark_forecasts.Rdata")
 
 MatrixVar = function(Matrix, w = w, alpha = alpha){
   
@@ -132,9 +134,10 @@ ListEmpericalVarChecker = function(w = w, OS , List , alpha = 0.05){
 
 
 #Comparing emperical VaR's
-alpha_test = 0.01
+alpha_test = 0.1
 
-NonPara_EV = NonParaEmpericalVarChecker(PortReturnsIS %>% tail(n = 500), PortReturnsOS , alpha = alpha_test);NonPara_EV[[2]]
+NonPara_EV = NonParaEmpericalVarChecker(PortReturnsIS %>% tail(n = 2517), PortReturnsOS , alpha = alpha_test);NonPara_EV[[2]]
+Bench_EV = ListEmpericalVarChecker(w = w, OS = PortReturnsOS, List = bench , alpha = alpha_test);Bench_EV[[2]]
 uGARCH_EV = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_g, alpha = alpha_test);uGARCH_EV[[2]]
 BEKK_EV = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_BEKK , alpha = alpha_test);BEKK_EV[[2]]
 DCC_EV = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_dcc, alpha = alpha_test);DCC_EV[[2]]
@@ -145,4 +148,67 @@ lines(uGARCH_EV$VaR , col = "red")
 lines(BEKK_EV$VaR , col = "blue")
 lines(DCC_EV$VaR , col = "green")
 lines(NonPara_EV$VaR , col = "yellow")
+lines(Bench_EV$VaR , col = "blue")
 
+#Trying with a smaller sample: 
+
+#Making new lists of covariance matrices.
+X_IS_short = tail(Return_DF , n = 1000) %>% .[,5:7]
+
+#BEKK
+source("./Rolling_BEKK.R")
+BEKK500 = Rolling_BEKK(IS = X_IS_short , OS = X_OS , optim = "Nelder-Mead")
+
+#DCC and uGARCH
+Data = rbind(X_IS_short %>% as.matrix(), X_OS %>% as.matrix())
+os = length(X_OS[,1])
+
+xspec <- ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
+                    mean.model = list( armaOrder = c(0,0) , include.mean = F) )
+uspec <- multispec(replicate(3,xspec))
+Spec <- dccspec(uspec = uspec,dccOrder = c(1, 1), distribution = 'mvnorm')
+
+cl = makePSOCKcluster(3)
+multf = multifit(uspec, Data, cluster = cl,out.sample = os,solver = "hybrid")
+
+Fit <- dccfit(Spec, data = Data, fit.control = list(eval.se = TRUE),
+              fit = multf, cluster = cl,out.sample = os,solver = "solnp")
+
+
+Forecast <- dccforecast(Fit, n.roll = os-1,cluster = cl)
+H_dcc500 <- Forecast@mforecast$H
+for(i in 1:os){
+  H_dcc500[[i]] <- H_dcc500[[i]] %>%  as.data.frame() %>% as.matrix()
+}
+
+ucast <- multiforecast(multifitORspec = multf, data = Data, n.ahead = 1, n.roll = os-1,
+                       out.sample = os,cluster = cl)
+
+g_matrix <- matrix(0,ncol = 3,nrow = os)
+for(j in 1:3){
+  forc <- ucast@forecast[[j]]
+  g_matrix[,j] <- (forc@forecast$sigmaFor)^2
+}
+
+
+H_g500 = list()
+for(j in 1:os){
+  H_g500[[j]] <- diag(g_matrix[j,])
+}
+
+stopCluster(cl)
+alpha_test = 0.1
+
+
+#Making emperical VaRs
+NonPara_EV500 = NonParaEmpericalVarChecker(PortReturnsIS %>% tail(n = 500), PortReturnsOS , alpha = alpha_test);NonPara_EV500[[2]]
+uGARCH_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_g500, alpha = alpha_test);uGARCH_EV500[[2]]
+BEKK_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = BEKK500 , alpha = alpha_test);BEKK_EV500[[2]]
+DCC_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_dcc500, alpha = alpha_test);DCC_EV500[[2]]
+
+
+plot(PortReturnsOS , type = "l" , ylim = c(-3,1.5))
+lines(uGARCH_EV500$VaR , col = "red")
+lines(BEKK_EV500$VaR , col = "blue")
+lines(DCC_EV500$VaR , col = "green")
+lines(NonPara_EV500$VaR , col = "yellow")

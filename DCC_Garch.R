@@ -30,7 +30,7 @@ H_dcc <- Forecast@mforecast$H
 for(i in 1:os){
   H_dcc[[i]] <- H_dcc[[i]] %>%  as.data.frame() %>% as.matrix()
 }
-stopCluster(cl)
+
 
 ucast <- multiforecast(multifitORspec = multf, data = Data, n.ahead = 1, n.roll = os-1,
                        out.sample = os,cluster = cl)
@@ -47,9 +47,12 @@ for(j in 1:os){
   H_g[[j]] <- diag(g_matrix[j,])
 }
 
-#save(H_g,file = "./Forecasts/uGARCH_forecasts.Rdata")
+save(H_g,file = "./Forecasts/uGARCH_forecasts.Rdata")
 
-#save(H_dcc,file = "./Forecasts/DCC_forecasts.Rdata")
+save(H_dcc,file = "./Forecasts/DCC_forecasts.Rdata")
+stopCluster(cl)
+
+
 
 H_diff <- list()
 for(i in 1:length(H_g))(

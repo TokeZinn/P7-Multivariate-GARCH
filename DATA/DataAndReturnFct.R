@@ -85,10 +85,10 @@ SP500 = SP500[-Index_Oil_Missing,]
 
 remove(Index_Gold,Index_Oil,Index_Oil_Missing)
 
-#Computing returns
-Gold_returns = returns(Gold$Value)[-1]
-Oil_returns = returns(Oil$Value)[-1]
-SP500_returns = returns(SP500$Close)[-1]
+#Computing demeaned returns for each series
+Gold_returns = returns(Gold$Value)[-1] - mean(returns(Gold$Value)[-1])
+Oil_returns = returns(Oil$Value)[-1] - mean(returns(Oil$Value)[-1])
+SP500_returns = returns(SP500$Close)[-1] - mean(returns(SP500$Close)[-1])
 
 #Making a data frame
 Return_DF = cbind.data.frame(SP500, Gold$Value , Oil$Value ); names(Return_DF) = c("Date", "SP500", "Gold", "Oil")
@@ -114,9 +114,9 @@ Index_Oil = which(!(Oil_OOS$Date %in% SP500_OOS$Date ))
 
 Oil_OOS = Oil_OOS[-Index_Oil,]  %>% arrange(Date)
 
-Gold_returns_OOS = returns(Gold_OOS$Value)[-1]
-Oil_returns_OOS = returns(Oil_OOS$Value)[-1]
-SP500_returns_OOS = returns(SP500_OOS$Close)[-1]
+Gold_returns_OOS = returns(Gold_OOS$Value)[-1] - mean(returns(Gold_OOS$Value)[-1])
+Oil_returns_OOS = returns(Oil_OOS$Value)[-1] - mean(returns(Oil_OOS$Value)[-1])
+SP500_returns_OOS = returns(SP500_OOS$Close)[-1] - mean(returns(SP500_OOS$Close)[-1])
 
 remove(Index_Gold,Index_Oil)
 

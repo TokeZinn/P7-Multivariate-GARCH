@@ -5,6 +5,7 @@ source("MVWLR.R")
 SP500_Roll = read.csv("./Forecasts/SP500_Roll.csv") ; Gold_Roll = read.csv("./Forecasts/Gold_Roll.csv")
 Oil_Roll = read.csv("./Forecasts/Oil_Roll.csv")
 load("./Forecasts/BEKK_forecasts.Rdata") ; load("./Forecasts/DCC_forecasts.Rdata")
+load("./Forecasts/Benchmark_forecasts.Rdata") ; load("./Forecasts/uGARCH_forecasts.Rdata")
 H_bekk <- mod; 
 
 DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
@@ -74,10 +75,21 @@ D3 = function(x){
   return(b)
 }  
 
+f_bek = function(x){
+  b = c()
+  for(i in 1:length(x[,1])){
+    b = c(b,dmvnorm(x[i,],mu = rep(0,length(x[1,])),Sigma = bek[[i]])) 
+  }
+  return(b)
+}
 
 
-
+WLR.test(OS,density1 = f_bekk,density2 = D2)
+WLR.test(OS,density1 = f_bekk,density2 = D3)
 WLR.test(OS,density1 = f_bekk,density2 = f_dcc)
+WLR.test(OS,density1 = f_dcc,density2 = D2)
+WLR.test(OS,density1 = f_dcc,density2 = D3)
+WLR.test(OS,density1 = D2,density2 = D3)
 
 
 
