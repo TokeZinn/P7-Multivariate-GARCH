@@ -98,7 +98,7 @@ NonParaEmpericalVarChecker = function(IS, OS , alpha = 0.05){
 #Compute empirical VaR using a list
 
 
-load("./Forecasts/BEKK_forecasts.Rdata"); H_BEKK = mod; remove(mod)
+load("./Forecasts/BEKK_forecasts_BFGS.Rdata"); H_BEKK = mod; remove(mod)
 load("./Forecasts/DCC_forecasts.Rdata")
 load("./Forecasts/uGARCH_forecasts.Rdata")
 load("./Forecasts/Benchmark_forecasts.Rdata")
@@ -150,8 +150,14 @@ lines(DCC_EV$VaR , col = "green")
 lines(NonPara_EV$VaR , col = "yellow")
 lines(Bench_EV$VaR , col = "blue")
 
+VaR_DF = data.frame(cbind(Return_DF_OOS$Date, PortReturnsOS,NonPara_EV[[1]] , Bench_EV[[1]], uGARCH_EV[[1]], BEKK_EV[[1]], DCC_EV[[1]]))
+names(VaR_DF) = c("Date","Returns", "NP", "Cov", "uGARCH","BEKK","DCC")
 
-
+VaR_DF %>% 
+  gather(key = "VaR", value = "Value", -Date) %>% 
+  ggplot(aes(x = as.Date(Date), y = Value, color = VaR, group = VaR)) + 
+  geom_line() + scale_color_manual(values = c("#ff0000", "#660066","#619CFF", "#800000", "#000000", "#00ff00")) +
+  theme(legend.title=element_blank()) + xlab("Date") + ylab("Returns / VaR") 
 
 
 #Trying with a smaller sample: 

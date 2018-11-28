@@ -60,9 +60,9 @@ returns = function(data, series = NULL, logreturns = T, Date = T,demean = T){
 
 Quandl.api_key("CtCjYTvXs7FS5robdqFv")
 
-Oil = Quandl('OPEC/ORB' , start_date= "2007-12-31", end_date = "2017-12-31")
-Gold = Quandl('WGC/GOLD_DAILY_USD', start_date= "2007-12-31" , end_date = "2017-12-31")
-SP500 = read.csv("./DATA/^GSPC.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
+Oil = Quandl('OPEC/ORB' , start_date= "2005-12-31", end_date = "2006-12-31")
+Gold = Quandl('WGC/GOLD_DAILY_USD', start_date= "2005-12-31" , end_date = "2006-12-31")
+SP500 = read.csv("./^GSPC_2006_IS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
 
 SP500$Date = SP500$Date %>% as.Date()
 Gold$Date = Gold$Date %>% as.Date()
@@ -82,47 +82,57 @@ Oil = Oil[-Index_Oil,]  %>% arrange(Date)
 
 Index_Oil_Missing = which(!(SP500$Date %in% Oil$Date ))
 
-Gold = Gold[-Index_Oil_Missing,]
 SP500 = SP500[-Index_Oil_Missing,]
 
 remove(Index_Gold,Index_Oil,Index_Oil_Missing)
 
-#Computing demeaned returns for each series
-Gold_returns = returns(Gold$Value)[-1] - mean(returns(Gold$Value)[-1])
-Oil_returns = returns(Oil$Value)[-1] - mean(returns(Oil$Value)[-1])
-SP500_returns = returns(SP500$Close)[-1] - mean(returns(SP500$Close)[-1])
 
 #Making a data frame
 Return_DF = cbind.data.frame(SP500, Gold$Value , Oil$Value ); names(Return_DF) = c("Date", "SP500", "Gold", "Oil")
 Return_DF = Return_DF %>% returns(series = c("SP500","Gold","Oil")) %>% mutate(Date = as.Date(Date))
 
+Dates_IS = Gold$Date[-1]
+
+remove(Gold,Oil,SP500)
 
 # Data OOS ----
-Oil_OOS = Quandl('OPEC/ORB' , start_date= "2017-12-31", end_date = "2018-09-30")
-Gold_OOS = Quandl('WGC/GOLD_DAILY_USD', start_date= "2017-12-31" , end_date = "2018-09-30")
-SP500_OOS = read.csv("./DATA/^GSPC_OOS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
+Oil_OS = Quandl('OPEC/ORB' , start_date= "2006-12-31", end_date = "2011-12-31")
+Gold_OS = Quandl('WGC/GOLD_DAILY_USD', start_date= "2006-12-31" , end_date = "2011-12-31")
+SP500_OS = read.csv("./^GSPC_2006_OS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
 
-SP500_OOS$Date = SP500_OOS$Date %>% as.Date()
-Gold_OOS$Date = Gold_OOS$Date %>% as.Date()
-Oil_OOS$Date = Oil_OOS$Date %>% as.Date()
+SP500_OS$Date = SP500_OS$Date %>% as.Date()
+Gold_OS$Date = Gold_OS$Date %>% as.Date()
+Oil_OS$Date = Oil_OS$Date %>% as.Date()
 
 #SP500 have fewer observations due to holidays. These are removed for the two data sets.
 
-Index_Gold = which(!(Gold_OOS$Date %in% SP500_OOS$Date ))
+Index_Gold = which(!(Gold_OS$Date %in% SP500_OS$Date ))
 
-Gold_OOS = Gold_OOS[-Index_Gold,] %>% arrange(Date)
+Gold_OS = Gold_OS[-Index_Gold,] %>% arrange(Date)
 
-Index_Oil = which(!(Oil_OOS$Date %in% SP500_OOS$Date ))
+Index_Oil = which(!(Oil_OS$Date %in% SP500_OS$Date ))
 
-Oil_OOS = Oil_OOS[-Index_Oil,]  %>% arrange(Date)
+Oil_OS = Oil_OS[-Index_Oil,]  %>% arrange(Date)
 
-Gold_returns_OOS = returns(Gold_OOS$Value)[-1] - mean(returns(Gold_OOS$Value)[-1])
-Oil_returns_OOS = returns(Oil_OOS$Value)[-1] - mean(returns(Oil_OOS$Value)[-1])
-SP500_returns_OOS = returns(SP500_OOS$Close)[-1] - mean(returns(SP500_OOS$Close)[-1])
 
-remove(Index_Gold,Index_Oil)
+#Oil has two less observations. These are removed from the two other data sets. 
+
+Index_Oil_Missing = which(!(SP500_OS$Date %in% Oil_OS$Date ))
+
+Gold_OS = Gold_OS[-Index_Oil_Missing,]
+SP500_OS = SP500_OS[-Index_Oil_Missing,]
+
+remove(Index_Gold,Index_Oil,Index_Oil_Missing)
 
 #Making a data frame
-Return_DF_OOS = cbind.data.frame(SP500_OOS, Gold_OOS$Value , Oil_OOS$Value ); names(Return_DF_OOS) = c("Date", "SP500_OOS", "Gold_OOS", "Oil_OOS")
-Return_DF_OOS = Return_DF_OOS %>% returns(series = c("SP500_OOS","Gold_OOS","Oil_OOS")) %>% mutate(Date = as.Date(Date))
+Return_DF_OS = cbind.data.frame(SP500_OS, Gold_OS$Value , Oil_OS$Value ); names(Return_DF_OS) = c("Date", "SP500_OS", "Gold_OS", "Oil_OS")
+Return_DF_OS = Return_DF_OS %>% returns(series = c("SP500_OS","Gold_OS","Oil_OS")) %>% mutate(Date = as.Date(Date))
+
+Dates_OS = Gold_OS$Date[-1]
+
+remove(Gold_OS,Oil_OS, SP500_OS)
+
+IS <- Return_DF[,5:7] %>% as.matrix() ; OS <- Return_DF_OS[,5:7] %>% as.matrix()
+is <- length(IS[,1]);os <- length(OS[,1]) ; Data <- rbind(IS,OS)
+
 

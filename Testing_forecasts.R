@@ -2,14 +2,14 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(tidyverse,emdbook,readxl)
 load("Data_and_returns.Rdata")
 source("MVWLR.R")
-#load("./Forecasts/BEKK_forecasts.Rdata") ; H_bekk <- mod; remove(mod)
-load("./Forecasts/BEKK_forecasts_BFGS.Rdata") ; H_bekk <- mod; remove(mod)
-load("./Forecasts/DCC_forecasts.Rdata")
-load("./Forecasts/Benchmark_forecasts.Rdata") ; load("./Forecasts/uGARCH_forecasts.Rdata")
+# #load("./Forecasts/BEKK_forecasts.Rdata") ; H_bekk <- mod; remove(mod)
+# load("./Forecasts/BEKK_forecasts_BFGS.Rdata") ; H_bekk <- mod; remove(mod)
+# load("./Forecasts/DCC_forecasts.Rdata")
+# load("./Forecasts/Benchmark_forecasts.Rdata") ; load("./Forecasts/uGARCH_forecasts.Rdata")
+load("./Forecasts_1000/Benchmark_forecasts_1000.Rdata")
+load("./Forecasts_1000/DCC_forecasts_1000.Rdata")
+load("./Forecasts_1000/uGARCH_forecasts_1000.Rdata")
 
-
-DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()
-OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix()
 
 
 
@@ -34,20 +34,15 @@ Benchmark = function(IS , OS ,dim = 3){
   
 }
 
-#bench = Benchmark(DF,OS)
-#save(bench,file = "./Forecasts/Benchmark_forecasts.Rdata")
+bench_1000 = Benchmark(IS,OS)
+save(bench_1000,file = "Benchmark_forecasts_1000.Rdata")
 
 
-WLR.test(OS,H1 = H_bekk,H2 = H_dcc)
-WLR.test(OS,H1 = H_bekk,H2 = bench)
-WLR.test(OS,H1 = H_bekk,H2 = H_g)
+
+
+WLR.test(OS,H1 = H_dcc,H2 = bench_1000,Plot = T,Dates = NULL)
+
+
 WLR.test(OS,H1 = H_dcc,H2 = H_g)
-WLR.test(OS,H1 = H_dcc,H2 = bench)
-
-
-
-#WLR.test(OS,density1 = D2,density2 = D3)
-#WLR.test(OS,density1 = D1,density2 = D3)
-#WLR.test(OS,density1 = D1,density2 = D2)
-
+WLR.test(OS,H1 = H_g,bench_1000)
 
