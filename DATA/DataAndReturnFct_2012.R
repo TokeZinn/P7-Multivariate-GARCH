@@ -60,9 +60,9 @@ returns = function(data, series = NULL, logreturns = T, Date = T,demean = T){
 
 Quandl.api_key("CtCjYTvXs7FS5robdqFv")
 
-Oil = Quandl('OPEC/ORB' , start_date= "2012-12-31", end_date = "2013-12-31")
-Gold = Quandl('WGC/GOLD_DAILY_USD', start_date= "2012-12-31" , end_date = "2013-12-31")
-SP500 = read.csv("./^GSPC_2013_IS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
+Oil = Quandl('OPEC/ORB' , start_date= "2011-12-31", end_date = "2013-12-31")
+Gold = Quandl('WGC/GOLD_DAILY_USD', start_date= "2011-12-31" , end_date = "2013-12-31")
+SP500 = read.csv("./^GSPC_2012_IS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
 
 SP500$Date = SP500$Date %>% as.Date()
 Gold$Date = Gold$Date %>% as.Date()
@@ -80,12 +80,13 @@ Oil = Oil[-Index_Oil,]  %>% arrange(Date)
 
 #Oil has two less observations. These are removed from the two other data sets. 
 
-Index_Oil_Missing = which(!(SP500$Date %in% Oil$Date ))
+Index_Oil_Missing = which(!(Gold$Date %in% Oil$Date ))
+Index_Oil_Missing1 = which(!(SP500$Date %in% Oil$Date ))
 
 Gold = Gold[-Index_Oil_Missing,]
-SP500 = SP500[-Index_Oil_Missing,]
+SP500 = SP500[-Index_Oil_Missing1,]
 
-remove(Index_Gold,Index_Oil,Index_Oil_Missing)
+remove(Index_Gold,Index_Oil,Index_Oil_Missing, Index_Oil_Missing1)
 
 
 #Making a data frame
@@ -99,7 +100,7 @@ remove(Gold,Oil,SP500)
 # Data OOS ----
 Oil_OS = Quandl('OPEC/ORB' , start_date= "2013-12-31", end_date = "2016-12-31")
 Gold_OS = Quandl('WGC/GOLD_DAILY_USD', start_date= "2013-12-31" , end_date = "2016-12-31")
-SP500_OS = read.csv("./^GSPC_2013_OS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
+SP500_OS = read.csv("./^GSPC_2012_OS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
 
 SP500_OS$Date = SP500_OS$Date %>% as.Date()
 Gold_OS$Date = Gold_OS$Date %>% as.Date()

@@ -15,26 +15,26 @@ os <- length(OS[,1]) ; is <- length(IS[,1])
 
 tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
                            optim = "Nelder-Mead");toc()
-save(H_bekk,file = "BEKK_forecasts_711_nelder.Rdata")
+save(H_bekk,file = "./Forecasts_2006/BEKK_forecasts_2006_nelder.Rdata")
 
 
 
 tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
                               optim = "BFGS");toc()
-save(H_bekk,file = "BEKK_forecasts_711_BFGS.Rdata")
+save(H_bekk,file = "./Forecasts_2006/BEKK_forecasts_2006_BFGS.Rdata")
 
 
-load("./DATA/Workspace2013.RData")
+load("./DATA/Workspace2012.RData")
 
 tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
                               optim = "Nelder-Mead");toc()
-save(H_bekk,file = "BEKK_forecasts_2013_nelder.Rdata")
+save(H_bekk,file = "./Forecasts_2012/BEKK_forecasts_2012_nelder.Rdata")
 
 
 
 tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
                               optim = "BFGS");toc()
-save(H_bekk,file = "BEKK_forecasts_2013_BFGS.Rdata")
+save(H_bekk,file = "./Forecasts_2012/BEKK_forecasts_2012_BFGS.Rdata")
 
 
 

@@ -41,7 +41,7 @@ WLR.test = function(data,H1,
     Data <- cbind(Dates,cumsum) %>% as.data.frame(); colnames(Data) <- c("Date","Cumulative_Log_Score_Diff")
     
     g <- ggplot(data = Data) + 
-      geom_line(aes(x = Date,y=Cumulative_Log_Score_Diff),size = 1) + 
+      geom_line(aes(x = Dates,y=Cumulative_Log_Score_Diff),size = 1) + 
       ylab("Cumulative Log score difference")#+ 
       #geom_line(aes(x=rs,y=Power$CSL_Power,colour = "CSL"),linetype="dashed",size = 1) +
       #scale_y_continuous(limits = c(0.8,1)) + xlab("r") + ylab("Rejection rate") +

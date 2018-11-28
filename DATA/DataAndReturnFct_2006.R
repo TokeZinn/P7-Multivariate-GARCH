@@ -60,8 +60,8 @@ returns = function(data, series = NULL, logreturns = T, Date = T,demean = T){
 
 Quandl.api_key("CtCjYTvXs7FS5robdqFv")
 
-Oil = Quandl('OPEC/ORB' , start_date= "2005-12-31", end_date = "2006-12-31")
-Gold = Quandl('WGC/GOLD_DAILY_USD', start_date= "2005-12-31" , end_date = "2006-12-31")
+Oil = Quandl('OPEC/ORB' , start_date= "2005-12-31", end_date = "2007-12-31")
+Gold = Quandl('WGC/GOLD_DAILY_USD', start_date= "2005-12-31" , end_date = "2007-12-31")
 SP500 = read.csv("./^GSPC_2006_IS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
 
 SP500$Date = SP500$Date %>% as.Date()
@@ -96,8 +96,8 @@ Dates_IS = Gold$Date[-1]
 remove(Gold,Oil,SP500)
 
 # Data OOS ----
-Oil_OS = Quandl('OPEC/ORB' , start_date= "2006-12-31", end_date = "2011-12-31")
-Gold_OS = Quandl('WGC/GOLD_DAILY_USD', start_date= "2006-12-31" , end_date = "2011-12-31")
+Oil_OS = Quandl('OPEC/ORB' , start_date= "2007-12-31", end_date = "2011-12-31")
+Gold_OS = Quandl('WGC/GOLD_DAILY_USD', start_date= "2007-12-31" , end_date = "2011-12-31")
 SP500_OS = read.csv("./^GSPC_2006_OS.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 
 
 SP500_OS$Date = SP500_OS$Date %>% as.Date()

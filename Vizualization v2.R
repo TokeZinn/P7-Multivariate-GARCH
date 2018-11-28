@@ -1,5 +1,5 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-source("./DATA/DataAndReturnFct.R")
+source("./DATA/DataAndReturnFct_FullSample.R")
 
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
@@ -36,10 +36,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     }
   }
 }
-
-Gold = rbind(Gold,Gold_OOS)
-Oil = rbind(Oil, Oil_OOS)
-SP500 = rbind(SP500, SP500_OOS)
 
 Date = Gold$Date
 
@@ -161,16 +157,12 @@ Close_Returns %>% ggacf(series = c( "SP500 Returns", "Gold Returns" ,"Oil Return
 
 
 # Statistical properties: ----
-SP500_returns = c(SP500_returns, SP500_returns_OOS)
-Gold_returns = c(Gold_returns, Gold_returns_OOS)
-Oil_returns = c(Oil_returns, Oil_returns_OOS)
-
-returns(rbind(SP500,SP500_OOS) ,series = "Close" , demean = F) %>% .$Returns_Close %>% mean()
+returns(SP500 ,series = "Close" , demean = F) %>% .$Returns_Close %>% mean()
 var(SP500_returns)
 e1071::skewness(SP500_returns)
 e1071::kurtosis(SP500_returns , type = 1) + 3
 
-returns(rbind(Gold,Gold_OOS) ,series = "Value" , demean = F) %>% .$Returns_Value %>% mean()
+returns(Gold ,series = "Value" , demean = F) %>% .$Returns_Value %>% mean()
 var(Gold_returns)
 e1071::skewness(Gold_returns)
 e1071::kurtosis(Gold_returns , type = 1) + 3
