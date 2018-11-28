@@ -3,7 +3,7 @@ pacman::p_load(tidyverse,rmgarch,mgarchBEKK,tictoc)
 
 
 source("Rolling_BEKK.R")
-load("Data_and_returns.RData")
+load("./DATA/Workspace2006.RData")
 
 
 DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix(); 
@@ -15,13 +15,27 @@ os <- length(OS[,1]) ; is <- length(IS[,1])
 
 tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
                            optim = "Nelder-Mead");toc()
-save(H_bekk,file = "BEKK_forecasts_1000_nelder.Rdata")
+save(H_bekk,file = "BEKK_forecasts_711_nelder.Rdata")
 
 
 
 tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
                               optim = "BFGS");toc()
-save(H_bekk,file = "BEKK_forecasts_1000_BFGS.Rdata")
+save(H_bekk,file = "BEKK_forecasts_711_BFGS.Rdata")
+
+
+load("./DATA/Workspace2013.RData")
+
+tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
+                              optim = "Nelder-Mead");toc()
+save(H_bekk,file = "BEKK_forecasts_2013_nelder.Rdata")
+
+
+
+tic (); H_bekk = Rolling_BEKK(IS,OS,c(1,1),dim = 3,
+                              optim = "BFGS");toc()
+save(H_bekk,file = "BEKK_forecasts_2013_BFGS.Rdata")
+
 
 
 
