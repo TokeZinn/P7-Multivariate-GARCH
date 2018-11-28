@@ -2,12 +2,11 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(tidyverse, rugarch, tictoc,rmgarch,parallel)
 load("Data_and_returns.RData")
 
+DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix(); 
+DF2 = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix() ; 
+Data <- rbind(DF,DF2);end = length(Data[,1]); OS <- Data[(1510):end,]; IS <- Data[1:1509,]
+os <- length(OS[,1]) ; is <- length(IS[,1])
 
-
-DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix(); is <- length(DF[,1])
-OS = Return_DF_OOS[,5:7] %>% as.data.frame() %>% as.matrix() ; os <- length(OS[,1])
-end = length(DF[,1]); end2 = length(OS[,1])
-Data <- rbind(DF,OS)
 
 
 xspec <- ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
@@ -48,9 +47,9 @@ for(j in 1:os){
   H_g[[j]] <- diag(g_matrix[j,])
 }
 
-save(H_g,file = "./Forecasts/uGARCH_forecasts.Rdata")
+save(H_g,file = "./Forecasts_1000/uGARCH_forecasts_1000.Rdata")
 
-save(H_dcc,file = "./Forecasts/DCC_forecasts.Rdata")
+save(H_dcc,file = "./Forecasts_1000/DCC_forecasts_1000.Rdata")
 stopCluster(cl)
 
 
@@ -68,7 +67,7 @@ sim <- dccsim(fitORspec = Fit,n.sim = is+os)
 df <- as.matrix(sim@msim$simX)
 multfsim = multifit(uspec, data = df[[1]], cluster = cl,out.sample = os,solver = "hybrid")
 Fitsim <- dccfit(Spec, data = df[[1]], fit.control = list(eval.se = TRUE),
-              fit = multfsim, cluster = cl,out.sample = os,solver = "solnp")
+                 fit = multfsim, cluster = cl,out.sample = os,solver = "solnp")
 
 stopCluster(cl)
 

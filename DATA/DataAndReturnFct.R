@@ -58,6 +58,8 @@ returns = function(data, series = NULL, logreturns = T, Date = T,demean = T){
 
 # Date in sample ----
 
+Quandl.api_key("CtCjYTvXs7FS5robdqFv")
+
 Oil = Quandl('OPEC/ORB' , start_date= "2007-12-31", end_date = "2017-12-31")
 Gold = Quandl('WGC/GOLD_DAILY_USD', start_date= "2007-12-31" , end_date = "2017-12-31")
 SP500 = read.csv("./DATA/^GSPC.csv", stringsAsFactors=FALSE) %>% .[,c(1,5)] 

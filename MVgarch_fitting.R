@@ -3,7 +3,7 @@ pacman::p_load(tidyverse,rmgarch,mgarchBEKK,tictoc)
 
 
 source("Rolling_BEKK.R")
-source("./DATA/DataAndReturnFct.R")
+load("Data_and_returns.RData")
 
 
 DF = Return_DF[,5:7] %>% as.data.frame() %>% as.matrix()

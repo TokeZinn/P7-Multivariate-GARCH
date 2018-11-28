@@ -1,23 +1,12 @@
-WLR.test = function(data,H1,
-                    H2,alpha = 0.05){
+WLR.test = function(data,density1,
+                    density2,alpha = 0.05){
   #browser()
   n <- length(data[,1]);m <- length(data[1,])
   
   Y <- as.matrix(data)
-  
-  f <- function(x,H){
-    d = c()
-    for(num in 1:n){
-      d[num] <- emdbook::dmvnorm(x[num,],mu = rep(0,3),Sigma = H[[num]])
-    }
-    return(d)
-  }  
-  
-  density1 <- f(Y,H1)
-  density2 <- f(Y,H2)
-  
-  WLR <- (log(density1)-log(density2))
-  
+
+  WLR <- (log(density1(Y))-log(density2(Y)))
+
   WLR.bar <- sum(WLR)/n
   hacsigma <- sqrt( sum(WLR^2)/n )
   

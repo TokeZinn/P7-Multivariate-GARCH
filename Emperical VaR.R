@@ -150,10 +150,14 @@ lines(DCC_EV$VaR , col = "green")
 lines(NonPara_EV$VaR , col = "yellow")
 lines(Bench_EV$VaR , col = "blue")
 
+
+
+
+
 #Trying with a smaller sample: 
 
 #Making new lists of covariance matrices.
-X_IS_short = tail(Return_DF , n = 1000) %>% .[,5:7]
+X_IS_short = tail(Return_DF , n = 500) %>% .[,5:7]
 
 #BEKK
 source("./Rolling_BEKK.R")
@@ -200,8 +204,32 @@ stopCluster(cl)
 alpha_test = 0.1
 
 
+Benchmark = function(IS , OS ,dim = 3){
+  IS = IS %>% as.data.frame() ; OS = OS %>% as.data.frame() ; names(OS) <- names(IS)
+  All_Data = rbind(IS,OS) %>% as.matrix()
+  
+  n = length(IS[,1])
+  m = length(OS[,1])
+  
+  OneSigma = list()
+  
+  for (i in 1:m) {
+    Current_Data = All_Data[i:(n-1+i),]
+    
+    OneSigma[[i]] = var(Current_Data)
+    
+  }
+  
+  return(OneSigma)
+  
+}
+
+bench500 = Benchmark(X_IS_short,X_OS)
+
+
 #Making emperical VaRs
-NonPara_EV500 = NonParaEmpericalVarChecker(PortReturnsIS %>% tail(n = 500), PortReturnsOS , alpha = alpha_test);NonPara_EV500[[2]]
+NonPara_EV500 = NonParaEmpericalVarChecker(PortReturnsIS %>% tail(n = 1000), PortReturnsOS , alpha = alpha_test);NonPara_EV500[[2]]
+Bench_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS, List = bench500, alpha = alpha_test);Bench_EV500[[2]]
 uGARCH_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_g500, alpha = alpha_test);uGARCH_EV500[[2]]
 BEKK_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = BEKK500 , alpha = alpha_test);BEKK_EV500[[2]]
 DCC_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_dcc500, alpha = alpha_test);DCC_EV500[[2]]
