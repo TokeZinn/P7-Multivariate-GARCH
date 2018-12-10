@@ -91,9 +91,9 @@ Conditional_WLR = function(Y,f,g,level,alpha = 0.20,debug = F, level_functions =
   HAC = sum(unlist(d)^2)/n
   t = WLR/(sqrt(HAC)/sqrt(n))
   
-  reject = (abs(t) > qnorm(alpha/2))
+  reject = (abs(t) > qnorm(1-alpha/2))
   
-  result = list("Statistic" = t, "Result" = "Not Statistically Different")
+  result = list("Statistic" = t, "Result" = "Not Statistically Different", "Diff" = d)
   
   if(reject & (sign(WLR) == 1)){
     result[["Result"]] = "f is the best density"
