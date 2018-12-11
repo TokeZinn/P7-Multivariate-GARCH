@@ -167,11 +167,7 @@ var(Gold_returns)
 e1071::skewness(Gold_returns)
 e1071::kurtosis(Gold_returns , type = 1) + 3
 
-returns(Oil ,series = "Value" , demean = F) %>% .$Returns_Value %>% mean()
+returns(rbind(Oil,Oil_OOS) ,series = "Value" , demean = F) %>% .$Returns_Value %>% mean()
 var(Oil_returns)
 e1071::skewness(Oil_returns)
 e1071::kurtosis(Oil_returns , type = 1) + 3
-
-
-
-

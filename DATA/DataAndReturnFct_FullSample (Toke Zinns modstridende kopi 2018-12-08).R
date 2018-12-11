@@ -99,6 +99,6 @@ SP500_returns = returns(SP500$Close)[-1] - mean(returns(SP500$Close)[-1])
 
 #Making a data frame
 Return_DF = cbind.data.frame(SP500, Gold$Value , Oil$Value ); names(Return_DF) = c("Date", "SP500", "Gold", "Oil")
-Return_DF = Return_DF %>% returns(series = c("SP500","Gold","Oil") , demean = F) %>% mutate(Date = as.Date(Date))
+Return_DF = Return_DF %>% returns(series = c("SP500","Gold","Oil")) %>% mutate(Date = as.Date(Date))
 
 
