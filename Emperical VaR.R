@@ -1,11 +1,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 pacman::p_load(tidyverse, mgarchBEKK, rugarch, tictoc,rmgarch,parallel)
 
-source("./DATA/DataAndReturnFct.R")
-
-
-Return_DF %>% dplyr::select(Returns_SP500, Returns_Gold, Returns_Oil) %>% as.matrix() -> X_IS
-Return_DF_OOS %>% dplyr::select(Returns_SP500_OOS, Returns_Gold_OOS, Returns_Oil_OOS) %>% as.matrix() -> X_OS
+#Functions ---------------------------------------------------------------------------------------
 
 #Finding minimum variance portfolio
 
@@ -43,13 +39,32 @@ Min_Variance_Port = function(X, Sigma = NULL){
   
 }
 
-w = Min_Variance_Port(X_IS) %>% as.numeric()
-
-#Computeting portfolio returns of minimum variance portfolio.
-
-PortReturnsIS =  X_IS %*% w
-
-PortReturnsOS = X_OS %*% w
+MV_Port_Returns_OS = function(IS, OS){
+  
+  n = nrow(OS)
+  m = nrow(IS)
+  
+  weights = list()
+  
+  AllData = rbind(IS, OS)
+  
+  PortReturnsOS = rep(0, n)
+  
+  for (i in 1:n) {
+    
+    CurrentData = AllData[i:(m+i-1),]
+    
+    w = Min_Variance_Port(CurrentData)
+    
+    weights[[i]] = w
+    
+    PortReturnsOS[i] = OS[i,] %*% w
+    
+  }
+  
+  return(list(Returns = PortReturnsOS,
+              ws = weights))
+}
 
 #Computing empirical non parametric VaR
 
@@ -65,25 +80,28 @@ NonParaVaR = function(series, alpha = 0.05){
   return(VaR)
 }
 
-NonParaVaR(PortReturnsOS)
+#NonParaVaR(PortReturnsOS)
 
 NonParaEmpericalVarChecker = function(IS, OS , alpha = 0.05){
+  n = nrow(OS)
+  m = nrow(IS)
   
-  m = length(IS)
-  n = length(OS)
-  
-  AllData = c(IS, OS)
+  AllData = rbind(IS, OS)
   
   VaR = rep(0, n)
   ExceedCount = rep(0, n)
   
   for (i in 1:n) {
     
-    CurrentData = AllData[i:(n+i-1)]
+    CurrentData = AllData[i:(m+i-1),]
     
-    VaR[i] = NonParaVaR(CurrentData , alpha = alpha)
+    w = Min_Variance_Port(CurrentData)
     
-    if(OS[i] < VaR[i]){ExceedCount[i] = 1}
+    CurrentPortfolio = CurrentData %*% w
+    
+    VaR[i] = NonParaVaR(CurrentPortfolio , alpha = alpha)
+    
+    if( OS[i,] %*% w < VaR[i]){ExceedCount[i] = 1}
     
   }
   
@@ -94,14 +112,7 @@ NonParaEmpericalVarChecker = function(IS, OS , alpha = 0.05){
   
 }
 
-
 #Compute empirical VaR using a list
-
-
-load("./Forecasts/BEKK_forecasts_BFGS.Rdata"); H_BEKK = mod; remove(mod)
-load("./Forecasts/DCC_forecasts.Rdata")
-load("./Forecasts/uGARCH_forecasts.Rdata")
-load("./Forecasts/Benchmark_forecasts.Rdata")
 
 MatrixVar = function(Matrix, w = w, alpha = alpha){
   
@@ -111,18 +122,25 @@ MatrixVar = function(Matrix, w = w, alpha = alpha){
   
 }
 
-ListEmpericalVarChecker = function(w = w, OS , List , alpha = 0.05){
+ListEmpericalVarChecker = function( IS , OS , List , alpha = 0.05){
+
+  n = nrow(OS)
+  m = nrow(IS)
   
-  n = length(OS)
+  AllData = rbind(IS, OS)
   
   VaR = rep(0, n)
   ExceedCount = rep(0, n)
   
   for (i in 1:n) {
     
+    CurrentData = AllData[i:(m+i-1),]
+    
+    w = Min_Variance_Port(CurrentData)
+    
     VaR[i] = MatrixVar(List[[i]] , w = w , alpha = alpha)
     
-    if(OS[i] < VaR[i]){ExceedCount[i] = 1}
+    if(OS[i,] %*% w < VaR[i]){ExceedCount[i] = 1}
     
   }
   
@@ -132,117 +150,112 @@ ListEmpericalVarChecker = function(w = w, OS , List , alpha = 0.05){
               Exceedance = Exceedance))
 }
 
+#2006 ---------------------------------------------------------
 
-#Comparing emperical VaR's
-alpha_test = 0.1
-
-NonPara_EV = NonParaEmpericalVarChecker(PortReturnsIS %>% tail(n = 2517), PortReturnsOS , alpha = alpha_test);NonPara_EV[[2]]
-Bench_EV = ListEmpericalVarChecker(w = w, OS = PortReturnsOS, List = bench , alpha = alpha_test);Bench_EV[[2]]
-uGARCH_EV = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_g, alpha = alpha_test);uGARCH_EV[[2]]
-BEKK_EV = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_BEKK , alpha = alpha_test);BEKK_EV[[2]]
-DCC_EV = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_dcc, alpha = alpha_test);DCC_EV[[2]]
+load("./DATA/Workspace2006.Rdata")
 
 
-plot(PortReturnsOS , type = "l" , ylim = c(-4,1.5))
+load("./Forecasts_2006/BEKK_forecasts_2006_BFGS.Rdata")
+load("./Forecasts_2006/DCC_forecasts_2006.Rdata")
+load("./Forecasts_2006/uGARCH_forecasts_2006.Rdata")
+load("./Forecasts_2006/Benchmark_forecasts_2006.Rdata")
+
+
+alpha_test = 0.05
+
+NonPara_EV = NonParaEmpericalVarChecker(IS = IS, OS = OS , alpha = alpha_test);NonPara_EV[[2]]*100
+Bench_EV = ListEmpericalVarChecker(IS = IS, OS = OS, List = bench_2006 , alpha = alpha_test);Bench_EV[[2]]*100
+uGARCH_EV = ListEmpericalVarChecker(IS = IS, OS = OS , List = H_g, alpha = alpha_test);uGARCH_EV[[2]]*100
+BEKK_EV = ListEmpericalVarChecker(IS = IS, OS = OS , List = H_bekk , alpha = alpha_test);BEKK_EV[[2]]*100
+DCC_EV = ListEmpericalVarChecker(IS = IS, OS = OS , List = H_dcc, alpha = alpha_test);DCC_EV[[2]]*100
+
+PortReturnsOS = MV_Port_Returns_OS(IS = IS, OS = OS)  %>% .$Returns
+
+plot(PortReturnsOS , type = "l" )
 lines(uGARCH_EV$VaR , col = "red")
 lines(BEKK_EV$VaR , col = "blue")
 lines(DCC_EV$VaR , col = "green")
 lines(NonPara_EV$VaR , col = "yellow")
 lines(Bench_EV$VaR , col = "blue")
 
-VaR_DF = data.frame(cbind(Return_DF_OOS$Date, PortReturnsOS,NonPara_EV[[1]] , Bench_EV[[1]], uGARCH_EV[[1]], BEKK_EV[[1]], DCC_EV[[1]]))
-names(VaR_DF) = c("Date","Returns", "NP", "Cov", "uGARCH","BEKK","DCC")
+VaR_DF = data.frame(cbind(Return_DF_OS$Date, PortReturnsOS,NonPara_EV[[1]] , Bench_EV[[1]], uGARCH_EV[[1]], BEKK_EV[[1]], DCC_EV[[1]]))
+names(VaR_DF) = c("Date","Returns", "NP", "Bench", "uGARCH","BEKK","DCC")
 
-VaR_DF %>% 
+VaR_DF %>% select("Date","Returns","Bench") %>% 
   gather(key = "VaR", value = "Value", -Date) %>% 
-  ggplot(aes(x = as.Date(Date), y = Value, color = VaR, group = VaR)) + 
-  geom_line() + scale_color_manual(values = c("#ff0000", "#660066","#619CFF", "#800000", "#000000", "#00ff00")) +
-  theme(legend.title=element_blank()) + xlab("Date") + ylab("Returns / VaR") 
+  ggplot(aes(x = as.Date(Date , origin = "1970-01-01"), y = Value, color = VaR, group = rev(VaR) )) + 
+  geom_line() + scale_color_manual(values = c("#f00000", "#000000")) +
+  theme(legend.title=element_blank()) + xlab("Date") + ylab("Returns / VaR") -> p2;p2
 
-
-#Trying with a smaller sample: 
-
-#Making new lists of covariance matrices.
-X_IS_short = tail(Return_DF , n = 500) %>% .[,5:7]
-
-#BEKK
-source("./Rolling_BEKK.R")
-BEKK500 = Rolling_BEKK(IS = X_IS_short , OS = X_OS , optim = "Nelder-Mead")
-
-#DCC and uGARCH
-Data = rbind(X_IS_short %>% as.matrix(), X_OS %>% as.matrix())
-os = length(X_OS[,1])
-
-xspec <- ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                    mean.model = list( armaOrder = c(0,0) , include.mean = F) )
-uspec <- multispec(replicate(3,xspec))
-Spec <- dccspec(uspec = uspec,dccOrder = c(1, 1), distribution = 'mvnorm')
-
-cl = makePSOCKcluster(3)
-multf = multifit(uspec, Data, cluster = cl,out.sample = os,solver = "hybrid")
-
-Fit <- dccfit(Spec, data = Data, fit.control = list(eval.se = TRUE),
-              fit = multf, cluster = cl,out.sample = os,solver = "solnp")
-
-
-Forecast <- dccforecast(Fit, n.roll = os-1,cluster = cl)
-H_dcc500 <- Forecast@mforecast$H
-for(i in 1:os){
-  H_dcc500[[i]] <- H_dcc500[[i]] %>%  as.data.frame() %>% as.matrix()
-}
-
-ucast <- multiforecast(multifitORspec = multf, data = Data, n.ahead = 1, n.roll = os-1,
-                       out.sample = os,cluster = cl)
-
-g_matrix <- matrix(0,ncol = 3,nrow = os)
-for(j in 1:3){
-  forc <- ucast@forecast[[j]]
-  g_matrix[,j] <- (forc@forecast$sigmaFor)^2
-}
-
-
-H_g500 = list()
-for(j in 1:os){
-  H_g500[[j]] <- diag(g_matrix[j,])
-}
-
-stopCluster(cl)
-alpha_test = 0.1
-
-
-Benchmark = function(IS , OS ,dim = 3){
-  IS = IS %>% as.data.frame() ; OS = OS %>% as.data.frame() ; names(OS) <- names(IS)
-  All_Data = rbind(IS,OS) %>% as.matrix()
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
   
-  n = length(IS[,1])
-  m = length(OS[,1])
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
   
-  OneSigma = list()
+  numPlots = length(plots)
   
-  for (i in 1:m) {
-    Current_Data = All_Data[i:(n-1+i),]
-    
-    OneSigma[[i]] = var(Current_Data)
-    
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
   }
   
-  return(OneSigma)
-  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
 }
 
-bench500 = Benchmark(X_IS_short,X_OS)
+multiplot(p1,p2,p3,p4,p5 , cols = 1)
 
+# 2012 --------------------------------------------------------------------------------------------
+load("./DATA/Workspace2012.Rdata")
+load("./Forecasts_2012/BEKK_forecasts_2012_BFGS.Rdata")#; H_BEKK = mod; remove(mod)
+load("./Forecasts_2012/DCC_forecasts_2012.Rdata")
+load("./Forecasts_2012/uGARCH_forecasts_2012.Rdata")
+load("./Forecasts_2012/Benchmark_forecasts_2012.Rdata")
 
-#Making emperical VaRs
-NonPara_EV500 = NonParaEmpericalVarChecker(PortReturnsIS %>% tail(n = 1000), PortReturnsOS , alpha = alpha_test);NonPara_EV500[[2]]
-Bench_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS, List = bench500, alpha = alpha_test);Bench_EV500[[2]]
-uGARCH_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_g500, alpha = alpha_test);uGARCH_EV500[[2]]
-BEKK_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = BEKK500 , alpha = alpha_test);BEKK_EV500[[2]]
-DCC_EV500 = ListEmpericalVarChecker(w = w, OS = PortReturnsOS , List = H_dcc500, alpha = alpha_test);DCC_EV500[[2]]
+alpha_test = 0.05
 
+NonPara_EV = NonParaEmpericalVarChecker(IS = IS, OS = OS, alpha = alpha_test);NonPara_EV[[2]]*100
+Bench_EV = ListEmpericalVarChecker(IS = IS, OS = OS, List = bench_2012 , alpha = alpha_test);Bench_EV[[2]]*100
+uGARCH_EV = ListEmpericalVarChecker(IS = IS, OS = OS, List = H_g, alpha = alpha_test);uGARCH_EV[[2]]*100
+BEKK_EV = ListEmpericalVarChecker(IS = IS, OS = OS, List = H_bekk , alpha = alpha_test);BEKK_EV[[2]]*100
+DCC_EV = ListEmpericalVarChecker(IS = IS, OS = OS, List = H_dcc, alpha = alpha_test);DCC_EV[[2]]*100
 
-plot(PortReturnsOS , type = "l" , ylim = c(-3,1.5))
-lines(uGARCH_EV500$VaR , col = "red")
-lines(BEKK_EV500$VaR , col = "blue")
-lines(DCC_EV500$VaR , col = "green")
-lines(NonPara_EV500$VaR , col = "yellow")
+PortReturnsOS = MV_Port_Returns_OS(IS = IS, OS = OS) %>% .$Returns
+
+plot(PortReturnsOS , type = "l" )
+lines(uGARCH_EV$VaR , col = "red")
+lines(BEKK_EV$VaR , col = "blue")
+lines(DCC_EV$VaR , col = "green")
+lines(NonPara_EV$VaR , col = "yellow")
+lines(Bench_EV$VaR , col = "blue")
+
+VaR_DF = data.frame(cbind(Return_DF_OS$Date, PortReturnsOS,NonPara_EV[[1]] , Bench_EV[[1]], uGARCH_EV[[1]], BEKK_EV[[1]], DCC_EV[[1]]))
+names(VaR_DF) = c("Date","Returns", "NP", "Bench", "uGARCH","BEKK","DCC")
+
+VaR_DF %>% select("Date","Returns","uGARCH") %>% 
+  gather(key = "VaR", value = "Value", -Date) %>% 
+  ggplot(aes(x = as.Date(Date , origin = "1970-01-01"), y = Value, color = VaR, group = VaR )) + 
+  geom_line(size = 0.6) + scale_color_manual(values = c("#000000", "#ff0000")) +
+  theme(legend.title=element_blank()) + xlab("Date") + ylab("Returns / VaR") -> p3;p3
+
+multiplot(p1,p2,p3,p4,p5 , cols = 1)

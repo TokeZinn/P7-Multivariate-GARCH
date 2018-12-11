@@ -1,4 +1,4 @@
-library(copula)
+library(copula);library(tidyverse)
 
 #Copula Construction 
 copula = normalCopula(param=c(0.8), dim=2, dispstr="un")
@@ -7,9 +7,14 @@ set.seed(711)
 data = rMvdc(1000,distribution)
 
 #Plots 
+#Scatter
 data %>% as_tibble() %>% ggplot(aes(x = V1, y = V2)) + geom_point() +
-  scale_x_continuous(name = "X") + scale_y_continuous(name = "Y") -> P1
+  scale_x_continuous(name = "X") + scale_y_continuous(name = "Y") 
+
+#Histogram X
 data %>% as_tibble() %>% ggplot(aes(x = V1)) + geom_histogram() + scale_x_continuous(name = "X")
+
+#Histogram #Y
 data %>% as_tibble() %>% ggplot(aes(x = V2)) + geom_histogram() + scale_x_continuous(name = "Y")
 
 

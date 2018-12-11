@@ -1,4 +1,5 @@
-WLR.test = function(data,H1,H2,alpha = 0.05,Plot = F,Dates = NULL, title = "NULL"){
+WLR.test = function(data,H1,
+                    H2,alpha = 0.05,Plot = F,Dates = NULL){
   #browser()
   n <- length(data[,1]);m <- length(data[1,])
   
@@ -39,9 +40,9 @@ WLR.test = function(data,H1,H2,alpha = 0.05,Plot = F,Dates = NULL, title = "NULL
     }
     Data <- cbind(Dates,cumsum) %>% as.data.frame(); colnames(Data) <- c("Date","Cumulative_Log_Score_Diff")
     
-    g <- Data %>% mutate(Title = title) %>%  ggplot(data = .) + 
+    g <- ggplot(data = Data) + 
       geom_line(aes(x = Dates,y=Cumulative_Log_Score_Diff),size = 1) + 
-      ylab("CLSD") + xlab(NULL) + facet_grid(.~Title)
+      ylab("Cumulative Log score difference")#+ 
       #geom_line(aes(x=rs,y=Power$CSL_Power,colour = "CSL"),linetype="dashed",size = 1) +
       #scale_y_continuous(limits = c(0.8,1)) + xlab("r") + ylab("Rejection rate") +
       #scale_color_manual(values = c("#FF0000", "#282088")) +
@@ -52,5 +53,5 @@ WLR.test = function(data,H1,H2,alpha = 0.05,Plot = F,Dates = NULL, title = "NULL
   
   return(list(P_value = p.value,
               Statistic = t, 
-              Best_density = best,g,CLSD = cumsum[n] ))
+              Best_density = best,g ))
 }
