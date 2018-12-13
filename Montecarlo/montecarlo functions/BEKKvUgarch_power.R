@@ -39,9 +39,6 @@ BEKKvUgarch_power <- function(in.sample,out.sample,alpha = 0.05,B = 100,
     }
     H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),],refit = refit,optim = optim)
     g_matrix <- matrix(0,ncol = 3,nrow = os)
-    #for(j in 1:3){
-    #  g_matrix[,j] <- RollingForecast(IS = sim[1:is,j],OS = sim[(is+1):(is+os),j])
-    #}
     
     Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
@@ -83,37 +80,12 @@ BEKKvUgarch_power <- function(in.sample,out.sample,alpha = 0.05,B = 100,
           best_cl <- "Density 1"
         }
       }}
-    #CSL
-    {
-      #   Indy_c <- 0
-      #   S1 <- Indy*(log(f(sim))) + Indy_c*(log(1-int1))
-      #   S2 <- Indy*(log(g(sim))) + Indy_c*(log(1-int2))
-      # 
-      # 
-      #   WLR <- S1 - S2
-      #   WLR.bar <- sum(WLR)/n
-      #   hacsigma <- sqrt( sum(WLR^2)/n )
-      # 
-      #   t <- WLR.bar*sqrt(n)/(hacsigma)
-      #   p <- pnorm(t)
-      #   best_csl <- "Not significally different"
-      #   if(is.na(p)){
-      #     best_csl <- "Not significally different"
-      #   }
-      #   else{
-      #     if(p<alpha/2){
-      #       best_csl <- "Density 2"
-      #     }
-      #     if(p>1-alpha/2){
-      #       best_csl <- "Density 1"
-      #     }
-      #   }
-    }
+    
     
     Reject_r_count_cl[i,1]<-ifelse(best_cl == "Density 1" , 1 , 0)
-    #Reject_r_count_csl[i,1]<-ifelse(best_csl == "Density 1" , 1 , 0)
+
     Reject_r_count_cl[i,2] <- ifelse(best_cl == "Density 2" , 1 , 0)
-    #Reject_r_count_csl[i,2] <- ifelse(best_csl == "Density 2" , 1 , 0)
+
     print(c("i = ", i))
     print(c("Best =",best_cl))
   }

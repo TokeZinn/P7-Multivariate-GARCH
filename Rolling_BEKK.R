@@ -26,18 +26,12 @@ Rolling_BEKK = function(IS , OS , Spec = c(1,1),dim = 3,rs=c(1),optim = "BFGS",r
       H = t(C)%*%C + t(A)%*%res%*%t(res)%*%A + t(B)%*%H%*%B
     }
     
-    
-    #res = c()
-    #for(j in 1:dim){
-    #  res = c(res,Fit$residuals[[j]][n])
-    #}
     res = Current_Data[n,]
     
     forecast = t(C)%*%C + t(A)%*%res%*%t(res)%*%A + t(B)%*%H%*%B
     
     OneSigma[[i]] = forecast
-    
-    #print(c("Iteration = ",i),sep="\n")
+
   }
   
   return(OneSigma)

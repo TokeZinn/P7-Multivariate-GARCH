@@ -119,25 +119,5 @@ lines(s1,col = "red")
 
 
 
-deck <- 30 ; draws <- 4 ; cards <- 2 ; prob <- 0 ; prob2 <- 0
-for(i in 1:cards){
-  prob <- prob + choose(cards,i)*choose(deck-cards,draws-i)/choose(deck,draws)
-  prob2 <- prob2 + choose(cards,i)*choose(deck-draws-cards,draws-i)/choose(deck-draws,draws)
-}
-prob + (1-prob)*prob2 + (1-(prob + (1-prob)*prob2))*cards/(deck-draws)
 
-deck <- 30 ; draws <- 3 ; cards <- 2 ; prob <- 0 ; prob2 <- 0
-for(i in 1:cards){
-  prob <- prob + choose(cards,i)*choose(deck-cards,draws-i)/choose(deck,draws)
-  prob2 <- prob2 + choose(cards,i)*choose(deck-draws-cards,draws-i)/choose(deck-draws,draws)
-}
-prob + (1-prob)*prob2 + (1-(prob + (1-prob)*prob2))*cards/(deck-draws)
-
-
-
-
-n <- 611 ; sum <- 0
-for(i in 1:4){
-  sum <- sum + floor(n/5^i)
-}
 

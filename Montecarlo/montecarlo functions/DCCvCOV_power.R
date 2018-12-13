@@ -58,7 +58,7 @@ DCCvCOV_power <- function(in.sample,out.sample,alpha = 0.05,B = 100){
 
     
     
-    #CL
+
     {
       Indy <- 1
       S1 <- Indy*(log(f(sim[(is+1):(is+os),],H_f)/int1))
@@ -87,12 +87,9 @@ DCCvCOV_power <- function(in.sample,out.sample,alpha = 0.05,B = 100){
     
     
     Reject_r_count_cl[i,1]<-ifelse(best_cl == "Density 1" , 1 , 0)
-    #Reject_r_count_csl[i,1]<-ifelse(best_csl == "Density 1" , 1 , 0)
     Reject_r_count_cl[i,2] <- ifelse(best_cl == "Density 2" , 1 , 0)
-    #Reject_r_count_csl[i,2] <- ifelse(best_csl == "Density 2" , 1 , 0)
     print(c("i = ", i))
   }
-  #browser()
   j = 1
   Reject_Matrix_cl[j,] <- c(sum(Reject_r_count_cl[,1])/B,sum(Reject_r_count_cl[,2])/B)
   Reject_Matrix_csl[j,] <- c(sum(Reject_r_count_csl[,1])/B,sum(Reject_r_count_csl[,2])/B)

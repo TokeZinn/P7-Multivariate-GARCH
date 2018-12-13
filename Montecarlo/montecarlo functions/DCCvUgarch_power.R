@@ -47,14 +47,6 @@ DCCvUgarch_power <- function(in.sample,out.sample,alpha = 0.05,B = 100){
       H_f[[j]] <- H_f[[j]] %>%  as.data.frame() %>% as.matrix()
     }
     
-    
-    # g_matrix <- matrix(0,ncol = 3,nrow = os)
-    # for(j in 1:3){
-    #   roll = ugarchroll(spec = xspec,data = sim[,j],forecast.length = os,
-    #                     refit.every = 1,refit.window = "moving",solver = "hybrid",
-    #                     calculate.VaR = F,window.size = is)
-    #   g_matrix[,j] <- (roll@forecast$density$Sigma)^2
-    # }
     ucast <- multiforecast(multifitORspec = multfsim, data = sim, n.ahead = 1, n.roll = os-1,
                            out.sample = os,cluster = cl)
     
@@ -70,7 +62,6 @@ DCCvUgarch_power <- function(in.sample,out.sample,alpha = 0.05,B = 100){
       H_g[[j]] <- diag(g_matrix[j,])
     }
     
-    #CL
     {
       Indy <- 1
       S1 <- Indy*(log(f(sim[(is+1):(is+os),],H_f)/int1))

@@ -41,7 +41,7 @@ densities_g = lapply(H_g, build_densities)
 Result %>% extract_level() -> levels
 
 
-Conditional_WLR = function(Y,f,g,level,alpha = 0.20,debug = F, level_functions = densities_BENCH){
+CL_WLR = function(Y,f,g,level,alpha = 0.05,debug = F, level_functions = densities_BENCH){
   if(debug){
     browser()
   }
@@ -56,14 +56,13 @@ Conditional_WLR = function(Y,f,g,level,alpha = 0.20,debug = F, level_functions =
     f_x = level_func(x)
     I = f_x >= f_l
     
-    
-    
     if(I){
-      f_tilde = function(x){(level_func(x) >= level_func(level))*func(x)}
-      J = integral(f_tilde,lower = rep(-10,length(x)),upper = rep(10,length(x)))
-      s = log(J)
+      s = 0
     }else{
-      s = log(func(x))
+      f_tilde = function(x){(level_func(x) >= level_func(level))*func(x)}
+      J = 1 - integral(f_tilde,lower = rep(-10,length(x)),upper = rep(10,length(x)))
+      
+      s = log(func(x)/J)
     }
     
     return(s)
@@ -91,9 +90,9 @@ Conditional_WLR = function(Y,f,g,level,alpha = 0.20,debug = F, level_functions =
   HAC = sum(unlist(d)^2)/n
   t = WLR/(sqrt(HAC)/sqrt(n))
   
-  reject = (abs(t) > qnorm(1-alpha/2))
+  reject = (abs(t) > qnorm(alpha/2))
   
-  result = list("Statistic" = t, "Result" = "Not Statistically Different", "Diff" = d)
+  result = list("Statistic" = t, "Result" = "Not Statistically Different")
   
   if(reject & (sign(WLR) == 1)){
     result[["Result"]] = "f is the best density"
@@ -103,19 +102,17 @@ Conditional_WLR = function(Y,f,g,level,alpha = 0.20,debug = F, level_functions =
     result[["Result"]] = "g is the best density"
   }
   
-  result[["p-value"]] = 2*(1 - pnorm(abs(t)))
+  result[["p-value"]] = 1 - pnorm(abs(t))
   
   class(result) = c("WLR")
   
   return(result)
-  
-  
 }
 
 
-BENCH_BEKK_2012 = Conditional_WLR(OS,densities_BENCH,densities_BEKK,levels,debug = F)
-BENCH_DCC_2012 = Conditional_WLR(OS,densities_BENCH,densities_DCC,levels,debug = F)
-BENCH_uGARCH_2012 = Conditional_WLR(OS,densities_BENCH,densities_g,levels,debug = F)
-BEKK_DCC_2012 = Conditional_WLR(OS,densities_BEKK,densities_DCC,levels,debug = F)
-BEKK_uGARCH_2012 = Conditional_WLR(OS,densities_BEKK,densities_g,levels,debug = F)
-DCC_uGARCH_2012 = Conditional_WLR(OS,densities_DCC,densities_g,levels,debug = F)
+BENCH_BEKK_2012_CL = CL_WLR(OS,densities_BENCH,densities_BEKK,levels,debug = F)
+BENCH_DCC_2012_CL = CL_WLR(OS,densities_BENCH,densities_DCC,levels,debug = F)
+BENCH_uGARCH_2012_CL = CL_WLR(OS,densities_BENCH,densities_g,levels,debug = F)
+BEKK_DCC_2012_CL = CL_WLR(OS,densities_BEKK,densities_DCC,levels,debug = F)
+BEKK_uGARCH_2012_CL = CL_WLR(OS,densities_BEKK,densities_g,levels,debug = F)
+DCC_uGARCH_2012_CL = CL_WLR(OS,densities_DCC,densities_g,levels,debug = F)
