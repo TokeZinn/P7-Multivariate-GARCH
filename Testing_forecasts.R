@@ -24,7 +24,7 @@ Benchmark = function(IS , OS ,dim = 3){
 }
 
 
-
+## Unweighted 2006
 
 load("./DATA/Workspace2006.Rdata")
 # bench_2006 = Benchmark(IS,OS)
@@ -69,6 +69,8 @@ test6 <- WLR.test(OS,H1 = H_bekk,H2 = H_dcc,Plot = T,Dates = Dates_OS,
 source("Multiplot.R")
 multiplot(test1[[4]],test2[[4]],test3[[4]],test4[[4]],test5[[4]],test6[[4]],
           cols = 3)
+
+## Unweighted 2012
 
 load("./DATA/Workspace2012.Rdata")
 # bench_2012 = Benchmark(IS,OS)
@@ -119,5 +121,93 @@ lines(s1,col = "red")
 
 
 
+## CL 2006
+load("./DATA/Workspace2006.Rdata")
 
+
+
+test1 <- BENCH_uGARCH_2006_CL %>% corrected_statistic() 
+test2 <- BENCH_DCC_2006_CL %>% corrected_statistic()
+test3 <- BENCH_BEKK_2006_CL %>% corrected_statistic()
+test4 <- DCC_uGARCH_2006_CL %>% corrected_statistic()
+test5 <- BEKK_uGARCH_2006_CL %>% corrected_statistic()
+BEKK_DCC_2006_CL %>% corrected_statistic() 
+
+
+
+
+Data1 <- cbind(Dates_OS, BENCH_uGARCH_2006_CL %>% .$Diff %>% unlist() %>% cumsum()*(-1) ) %>% as.data.frame(); colnames(Data1) <- c("Date","CLCLD")
+
+g1 = ggplot(Data1) + 
+  geom_line(aes(x = Date %>% as.Date(origin = "1970-01-01"), y = CLCLD) ,size = 1) + 
+  ylab("CCLCLD") + xlab(NULL) + facet_grid(.~"uGARCH and Benchmark");g1
+
+Data2 <- cbind(Dates_OS, BENCH_DCC_2006_CL %>% .$Diff %>% unlist() %>% cumsum()*(-1) ) %>% as.data.frame(); colnames(Data2) <- c("Date","CLCLD")
+
+g2 = ggplot(Data2) +
+  geom_line(aes(x = Date %>% as.Date(origin = "1970-01-01"), y = CLCLD) ,size = 1) + 
+  ylab("CLCSLD") + xlab(NULL) + facet_grid(.~"DCC and Benchmark");g2
+
+Data3 <- cbind(Dates_OS, BENCH_BEKK_2006_CL %>% .$Diff %>% unlist() %>% cumsum()*(-1) ) %>% as.data.frame(); colnames(Data3) <- c("Date","CLCLD")
+
+g3 = ggplot(Data3) +
+  geom_line(aes(x = Date %>% as.Date(origin = "1970-01-01"), y = CLCLD) ,size = 1) + 
+  ylab("CLCSLD") + xlab(NULL) + facet_grid(.~"BEKK and Benchmark");g3
+
+Data4 <- cbind(Dates_OS, DCC_uGARCH_2006_CL %>% .$Diff %>% unlist() %>% cumsum() ) %>% as.data.frame(); colnames(Data4) <- c("Date","CLCLD")
+
+g4 = ggplot(Data4) +
+  geom_line(aes(x = Date %>% as.Date(origin = "1970-01-01"), y = CLCLD) ,size = 1) + 
+  ylab("CLCSLD") + xlab(NULL) + facet_grid(.~"DCC and uGARCH");g4
+
+Data5 <- cbind(Dates_OS, BEKK_uGARCH_2006_CL %>% .$Diff %>% unlist() %>% cumsum() ) %>% as.data.frame(); colnames(Data5) <- c("Date","CLCLD")
+
+g5 = ggplot(Data5) +
+  geom_line(aes(x = Date %>% as.Date(origin = "1970-01-01"), y = CLCLD) ,size = 1) + 
+  ylab("CLCSLD") + xlab(NULL) + facet_grid(.~"BEKK and uGARCH");g5
+
+Data6 <- cbind(Dates_OS, BEKK_DCC_2006_CL %>% .$Diff %>% unlist() %>% cumsum() ) %>% as.data.frame(); colnames(Data6) <- c("Date","CLCLD")
+
+g6 = ggplot(Data6) +
+  geom_line(aes(x = Date %>% as.Date(origin = "1970-01-01"), y = CLCLD) ,size = 1) + 
+  ylab("CLCSLD") + xlab(NULL) + facet_grid(.~"BEKK and DCC");g6
+
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+multiplot(g1,g2,g3,g4,g5,g6 , cols = 3)
 

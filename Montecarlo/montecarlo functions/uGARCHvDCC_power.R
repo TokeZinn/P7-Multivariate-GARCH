@@ -1,5 +1,4 @@
-UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim = "BFGS0",
-                              refit = 10){
+uGARCHvDCC_power <- function(in.sample,out.sample,alpha = 0.05,B = 100){
   #browser()
   {
     Reject_Matrix_cl <- matrix(data = 0, nrow = length(1) , ncol = 2)
@@ -9,15 +8,15 @@ UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim =
     Reject_r_count_csl <- matrix(data = 0, nrow = B , ncol = 2)
     All_data = rbind(in.sample,out.sample)
     
-    Spec = ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
-                      mean.model = list( armaOrder = c(0,0) , include.mean = F) )
-
-    for(j in 1:3){
-      assign(paste("Fit",j,sep = "_"),
-             ugarchfit(spec = Spec,data = All_data[,j],solver = "hybrid"))
-    }
-    fits <- list(Fit_1,Fit_2,Fit_3) 
     
+    xspec <- ugarchspec(variance.model = list( model = "sGARCH", garchOrder = c(1,1)),
+                        mean.model = list( armaOrder = c(0,0) , include.mean = F) )
+    uspec <- multispec(replicate(3,xspec))
+    Spec <- dccspec(uspec = uspec,dccOrder = c(1, 1), distribution = 'mvnorm')
+    
+    cl = makePSOCKcluster(3)
+    multf = multifit(uspec, All_data, cluster = cl,out.sample = 0,solver = "hybrid")
+    #browser()
     int1 = 1
     int2 = 1
     
@@ -30,36 +29,46 @@ UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim =
     }
     
   }
-  #browser()
-  #sim <- list()
+  
   for(i in 1:B){
     
     for(j in 1:3){
       assign(paste("simG",j,sep = "_"),
-             ugarchsim(fit = fits[[j]],n.sim = length(All_data[,1])))
+             ugarchsim(fit = multf@fit[[j]],n.sim = length(All_data[,1])))
     }
-
+    
     sim <- matrix(0,nrow = is+os,ncol = 3)
     sim[,1] <- simG_1@simulation$seriesSim
     sim[,2] <- simG_2@simulation$seriesSim
     sim[,3] <- simG_3@simulation$seriesSim
     
-    H_f <- Rolling_BEKK(IS = sim[1:is,],OS = sim[(is+1):(is+os),], optim = optim,refit = refit)
-    g_matrix <- matrix(0,ncol = 3,nrow = os)
-
-    for(j in 1:3){
-      roll = ugarchroll(spec = Spec,data = sim[,j],forecast.length = os,
-                        refit.every = refit,refit.window = "moving",solver = "hybrid",
-                        calculate.VaR = F,window.size = is)
-      g_matrix[,j] <- (roll@forecast$density$Sigma)^2
+    
+    multfsim = multifit(uspec, sim, cluster = cl,out.sample = os,solver = "hybrid")
+    fit <- dccfit(Spec, data = sim, fit.control = list(eval.se = TRUE),
+                  fit = multfsim, cluster = cl,out.sample = os,solver = "solnp")
+    
+    Forecast <- dccforecast(fit, n.roll = os-1,cluster = cl)
+    
+    H_f <- Forecast@mforecast$H
+    for(j in 1:os){
+      H_f[[j]] <- H_f[[j]] %>%  as.data.frame() %>% as.matrix()
     }
+    
+    ucast <- multiforecast(multifitORspec = multfsim, data = sim, n.ahead = 1, n.roll = os-1,
+                           out.sample = os,cluster = cl)
+    
+    g_matrix <- matrix(0,ncol = 3,nrow = os)
+    for(j in 1:3){
+      forc <- ucast@forecast[[j]]
+      g_matrix[,j] <- (forc@forecast$sigmaFor)^2
+    }
+    
     
     H_g = list()
     for(j in 1:os){
       H_g[[j]] <- diag(g_matrix[j,])
     }
     
-    #CL
     {
       Indy <- 1
       S1 <- Indy*(log(f(sim[(is+1):(is+os),],H_f)/int1))
@@ -85,7 +94,7 @@ UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim =
           best_cl <- "Density 1"
         }
       }}
-
+    
     
     Reject_r_count_cl[i,1]<-ifelse(best_cl == "Density 1" , 1 , 0)
     #Reject_r_count_csl[i,1]<-ifelse(best_csl == "Density 1" , 1 , 0)
@@ -98,6 +107,7 @@ UGARCHvBEKK_power <- function(in.sample,out.sample,alpha = 0.05,B = 100, optim =
   Reject_Matrix_cl[j,] <- c(sum(Reject_r_count_cl[,1])/B,sum(Reject_r_count_cl[,2])/B)
   Reject_Matrix_csl[j,] <- c(sum(Reject_r_count_csl[,1])/B,sum(Reject_r_count_csl[,2])/B)
   
+  stopCluster(cl)
   return(list(Reject_Matrix_cl,Reject_Matrix_csl))
 }
 

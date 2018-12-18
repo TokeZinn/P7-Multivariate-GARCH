@@ -11,7 +11,7 @@ source("VaR_Functions.R")
 
 alpha_test = 0.1
 
-period = "06" #06 or 12 as string.
+period = "12" #06 or 12 as string.
 
 # Backtesting VaR - Conditional Coverage ----------------------------------
 

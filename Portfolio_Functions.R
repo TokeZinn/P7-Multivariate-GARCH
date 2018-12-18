@@ -1,5 +1,5 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-source("./DATA/DataAndReturnFct.R")
+source("./DATA/DataAndReturnFct_FullSample.R")
 
 Return_DF %>% dplyr::select(Returns_SP500, Returns_Gold, Returns_Oil) %>% as.matrix() -> X
 
@@ -163,7 +163,7 @@ m = apply(X = X,MARGIN = 2,FUN = mean)
 S = (1/nrow(X))*(t(X-m) %*% (X-m))
 
 
-mu_b = seq(from = -0.01, to = 0.05, by = 0.0001)
+mu_b = seq(from = -0.01, to = 0.052, by = 0.0001)
 weights = lapply(mu_b,FUN = function(x){Optimal_Portfolio_Desired(X = X,mu_b = x)})
 sigma = lapply(weights, function(x){sqrt(t(x) %*% S %*% x)}) %>% unlist()
 
@@ -190,7 +190,7 @@ L = c(rep("Efficient Frontier",length(mu_b)), "SP500", "Gold","Oil","Minimum Var
 
 dataframe = data.frame(M,V,L)
 names(dataframe) = c("Mean","Sigma","Portfolio")
-dataframe %>% mutate(Upper = Mean >= rep(mv_m,605)) -> dataframe
+dataframe %>% mutate(Upper = Mean >= rep(mv_m,length(mu_b))) -> dataframe
 
 c(1,2) %in% c(2,3)
 

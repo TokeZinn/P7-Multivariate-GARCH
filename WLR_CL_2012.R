@@ -92,7 +92,7 @@ CL_WLR = function(Y,f,g,level,alpha = 0.05,debug = F, level_functions = densitie
   
   reject = (abs(t) > qnorm(alpha/2))
   
-  result = list("Statistic" = t, "Result" = "Not Statistically Different")
+  result = list("Statistic" = t, "Result" = "Not Statistically Different" , "Diff" = d)
   
   if(reject & (sign(WLR) == 1)){
     result[["Result"]] = "f is the best density"
@@ -102,7 +102,7 @@ CL_WLR = function(Y,f,g,level,alpha = 0.05,debug = F, level_functions = densitie
     result[["Result"]] = "g is the best density"
   }
   
-  result[["p-value"]] = 1 - pnorm(abs(t))
+  result[["p-value"]] = 2*(1 - pnorm(abs(t)))
   
   class(result) = c("WLR")
   
