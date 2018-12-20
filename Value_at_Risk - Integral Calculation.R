@@ -1,4 +1,5 @@
 library(cubature);library(mvtnorm)
+Return_DF %>% select(Returns_SP500, Returns_Gold, Returns_Oil) -> X
 
 w = Min_Variance_Port(X)
 m = apply(X = X,MARGIN = 2,FUN = mean)

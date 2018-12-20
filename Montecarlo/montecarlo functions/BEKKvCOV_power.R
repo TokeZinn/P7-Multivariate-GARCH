@@ -47,11 +47,8 @@ BEKKvCOV_power <- function(in.sample,out.sample,alpha = 0.05,B = 100,optim = "BF
     }
     
     {
-      Indy <- 1
-      S1 <- Indy*(log(f(sim[(is+1):(is+os),],H_f)/int1))
-      S2 <- Indy*(log(f(sim[(is+1):(is+os),],H_g)/int2))
-      
-      #browser()
+      S1 <- (log(f(sim[(is+1):(is+os),],H_f)/int1))
+      S2 <- (log(f(sim[(is+1):(is+os),],H_g)/int2))
       
       WLR <- S1 - S2
       WLR.bar <- sum(WLR)/os

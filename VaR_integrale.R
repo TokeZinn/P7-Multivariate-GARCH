@@ -42,19 +42,12 @@ p <- plot_ly(x = ~x, y = ~y, z = ~zf_vec, type = 'scatter3d', mode = 'lines',
 p <- plot_ly(x = x,y=y,z = ~zf_star,type = "surface") %>% add_surface(z = ~zf, opacity = 0.6) %>% 
   add_trace(x = x, y = x, z = ~rep(0,length(x)), mode = "lines", type = "scatter3d", 
                                           line = list(width = 20, color = "red")) %>% 
-  layout(title = '',
-         xaxis = list(title = ""),
-         yaxis = list(side = '', title = ''),
-         zaxis = list())
+  layout(scene = list(
+    xaxis = list(title = "x"),
+    yaxis = list(title = "y"),
+    zaxis = list(title = "Density")
+    ))
          
-
-
-
-
-
-
-
-plot(cbind(x,y)%*%w)
 
 
 

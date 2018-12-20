@@ -1,6 +1,16 @@
 corrected_statistic = function(object, alpha = 0.05){
+  #browser()
+  n = length(unlist(object$Diff))
+  WLR = mean(unlist(object$Diff))
+  HAC = mean(unlist(object$Diff)^2)
+  
+  t_new = WLR/(sqrt(HAC)/sqrt(n))
   t = object$Statistic
+  print(t_new - t)
   d = unlist(object$Diff)
+  
+  object$Statistic = t_new
+  t = t_new
   
   reject = abs(t) > qnorm(1-(alpha/2)) 
   
@@ -35,6 +45,10 @@ print.WLR = function(object, draw = T){
 }
 
 
+#Correction for NaN
+BEKK_DCC_2006_CL$Diff[[590]] = BEKK_uGARCH_2006_CL$Diff[[590]] - DCC_uGARCH_2006_CL$Diff[[590]]
+
+
 BEKK_DCC_2006_CL %>% corrected_statistic() %>% print
 BEKK_uGARCH_2006_CL %>% corrected_statistic() %>% print
 BENCH_BEKK_2006_CL %>% corrected_statistic() %>% print
@@ -42,3 +56,5 @@ BENCH_DCC_2006_CL %>% corrected_statistic() %>% print
 BENCH_uGARCH_2006_CL %>% corrected_statistic() %>% print
 DCC_uGARCH_2006_CL %>% corrected_statistic() %>% print
 
+#Correction for NaN 
+BEKK_DCC_2006_CL$Diff[[590]] = BEKK_uGARCH_2006_CL$Diff[[590]] - DCC_uGARCH_2006_CL$Diff[[590]]

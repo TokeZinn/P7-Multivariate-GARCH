@@ -9,9 +9,9 @@ source("VaR_Functions.R")
 
 # Set confidence level and period ----------------------------------------------------
 
-alpha_test = 0.1
+alpha_test = 0.05
 
-period = "12" #06 or 12 as string.
+period = "06" #06 or 12 as string.
 
 # Backtesting VaR - Conditional Coverage ----------------------------------
 
